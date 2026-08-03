@@ -6,64 +6,7 @@
 // (no Docker), so this is the only way to prove server-side enforcement.
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!url || !anonKey || !serviceRoleKey) {
-  throw new Error(
-    "Missing Supabase env vars. These tests run against the real project " +
-      "and need NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, " +
-      "and SUPABASE_SERVICE_ROLE_KEY set in .env.local.",
-  );
-}
-
-// Admin client: creates/deletes the throwaway test users. Never used to
-// read or write posts/follows -- those calls go through each test user's
-// own signed-in client, so RLS is genuinely exercised.
-const admin = createClient(url, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
-
-const runId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
-
-interface TestUser {
-  id: string;
-  client: SupabaseClient;
-}
-
-async function createTestUser(userType: string): Promise<TestUser> {
-  const email = `test-${userType}-${runId}@example.com`;
-  const password = "TestPass123!";
-  const username = `t_${userType}_${runId}`.slice(0, 24);
-
-  const { data, error } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { username, user_type: userType },
-  });
-  if (error || !data.user) {
-    throw new Error(`Failed to create ${userType} test user: ${error?.message}`);
-  }
-
-  // A fresh anon-key client, signed in as this user -- this is what
-  // actually exercises RLS as that specific auth.uid().
-  const client = createClient(url!, anonKey!, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-  const { error: signInError } = await client.auth.signInWithPassword({
-    email,
-    password,
-  });
-  if (signInError) {
-    throw new Error(`Failed to sign in ${userType} test user: ${signInError.message}`);
-  }
-
-  return { id: data.user.id, client };
-}
+import { createTestUser, deleteTestUser, type TestUser } from "./helpers";
 
 describe("permission matrix enforced as RLS (not just UI)", () => {
   let reader: TestUser;
@@ -97,11 +40,7 @@ describe("permission matrix enforced as RLS (not just UI)", () => {
   });
 
   afterAll(async () => {
-    // Deleting the auth user cascades: profiles -> posts/follows/etc. all
-    // clean up automatically via the "on delete cascade" foreign keys.
-    for (const u of [reader, blogger, newsAgency]) {
-      if (u) await admin.auth.admin.deleteUser(u.id);
-    }
+    await Promise.all([reader, blogger, newsAgency].map(deleteTestUser));
   });
 
   it("a reader cannot create an Article (postArticle: false)", async () => {

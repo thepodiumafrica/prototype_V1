@@ -15,25 +15,57 @@
   --red: #b03a2e;
   --red-tint: #f4dcd6;
   --red-border: #dba095;
+  --accent-tint: #f3e0ce;
+  --accent-border: #dfc3a9;
+  /* NOTE: the prototype defines --terra: var(--terra) in light mode, a
+     self-reference that leaves it computing to nothing. Using --amber here
+     instead, since it's the closest existing clay/terracotta tone. */
+  --terra: #c05a2e;
+  --terra-tint: #f0dac8;
+  --terra-border: #d9a87e;
+  --green: #55754a;
+  --green-tint: #e4e8d8;
+  --green-border: #afc19a;
+  --blue: #2f4a6b;
+  --blue-tint: #dfe5ec;
+  --blue-border: #9fb2c8;
+  --gray-tint: #ede8dc;
+  --gray-border: #c8bfa9;
+  --gray-text: #6f6a5c;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Warm dark — clay-brown, not cold charcoal */
-    --bg: #1a130c;
-    --surface: #241b11;
-    --elevated: #2f2416;
-    --border: #3c2f1e;
-    --amber: #e08a54;
-    --amber-dim: #c99a3c;
-    --amber-faint: #33220f;
-    --text: #f2e8d5;
-    --text-muted: #c4b296;
-    --on-primary: #1a130c;
-    --red: #e06a5c;
-    --red-tint: #3a1f1b;
-    --red-border: #7a3b32;
-  }
+/* Matches ThePodium_v5.html: theme is a manual toggle (STATE.theme,
+   default "light"), not automatic OS detection -- applied via
+   document.documentElement.dataset.theme by <ThemeToggle>. */
+html[data-theme="dark"] {
+  /* Warm dark — clay-brown, not cold charcoal */
+  --bg: #1a130c;
+  --surface: #241b11;
+  --elevated: #2f2416;
+  --border: #3c2f1e;
+  --amber: #e08a54;
+  --amber-dim: #c99a3c;
+  --amber-faint: #33220f;
+  --text: #f2e8d5;
+  --text-muted: #c4b296;
+  --on-primary: #1a130c;
+  --red: #e06a5c;
+  --red-tint: #3a1f1b;
+  --red-border: #7a3b32;
+  --accent-tint: #3a2a15;
+  --accent-border: #5a4023;
+  --terra: #d97e4a;
+  --terra-tint: #3a2415;
+  --terra-border: #6e4526;
+  --green: #8fae7c;
+  --green-tint: #22301b;
+  --green-border: #4a6238;
+  --blue: #8faecb;
+  --blue-tint: #1d2a3a;
+  --blue-border: #3d5878;
+  --gray-tint: #2c2a24;
+  --gray-border: #57534a;
+  --gray-text: #9b968a;
 }
 
 @theme inline {
@@ -50,6 +82,20 @@
   --color-red: var(--red);
   --color-red-tint: var(--red-tint);
   --color-red-border: var(--red-border);
+  --color-accent-tint: var(--accent-tint);
+  --color-accent-border: var(--accent-border);
+  --color-terra: var(--terra);
+  --color-terra-tint: var(--terra-tint);
+  --color-terra-border: var(--terra-border);
+  --color-green: var(--green);
+  --color-green-tint: var(--green-tint);
+  --color-green-border: var(--green-border);
+  --color-blue: var(--blue);
+  --color-blue-tint: var(--blue-tint);
+  --color-blue-border: var(--blue-border);
+  --color-gray-tint: var(--gray-tint);
+  --color-gray-border: var(--gray-border);
+  --color-gray-text: var(--gray-text);
   --font-serif: var(--font-fraunces);
   --font-sans: var(--font-outfit);
 }
@@ -58,4 +104,35 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-outfit), sans-serif;
+}
+
+/* <ThemeToggle> shows one icon or the other purely via this attribute --
+   no React state, so there's nothing to hydrate out of sync. */
+.theme-icon-dark {
+  display: none;
+}
+html[data-theme="dark"] .theme-icon-light {
+  display: none;
+}
+html[data-theme="dark"] .theme-icon-dark {
+  display: inline;
+}
+
+/* Ported from ThePodium_v5.html's avatarHtml(). --avatar-hue is set inline
+   per-instance (deterministic from username); light/dark values below. */
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-weight: 600;
+  background: hsl(var(--avatar-hue) 48% 88%);
+  border: 2px solid hsl(var(--avatar-hue) 38% 62%);
+  color: hsl(var(--avatar-hue) 55% 26%);
+}
+html[data-theme="dark"] .avatar {
+  background: hsl(var(--avatar-hue) 30% 20%);
+  border-color: hsl(var(--avatar-hue) 28% 30%);
+  color: hsl(var(--avatar-hue) 50% 68%);
 }

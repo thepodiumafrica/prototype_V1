@@ -27,3 +27,22 @@ export const DIASPORA_COUNTRIES = [
   "Netherlands", "Italy", "Spain", "Belgium", "Portugal", "Sweden",
   "Australia", "Brazil", "Other",
 ] as const;
+
+// Ported from ThePodium_v5.html's EXPERTISE.
+export const EXPERTISE = [
+  "Nigerian fintech", "Mobile money", "African policy", "Afrobeats industry",
+  "Lagos tech ecosystem", "Nairobi startup scene", "African literature",
+  "Pan-African trade", "Diaspora career navigation", "African history",
+  "Climate & agriculture", "Health systems", "African art market",
+  "Women in tech Africa", "Islamic finance",
+] as const;
+
+// Ported from ThePodium_v5.html's TYPE_LABEL.
+export const TYPE_LABEL: Record<UserType, string> = {
+  blogger: "Blogger",
+  news_agency: "News Agency",
+  reader: "Reader",
+};
+
+// Ported from ThePodium_v5.html's TRUST_LABELS.
+export const TRUST_LABELS = ["", "New", "Rising", "Established", "Trusted", "Featured"] as const;
