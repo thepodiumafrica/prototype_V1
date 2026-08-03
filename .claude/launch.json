@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "thepodium-dev",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        "-lc",
+        "PATH=/Users/yvank/.nvm/versions/node/v24.18.1/bin:$PATH npm run dev"
+      ],
+      "port": 3000
+    }
+  ]
+}

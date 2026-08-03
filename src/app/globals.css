@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  /* Warm light — sand, clay, indigo (from ThePodium_v5.html prototype) */
+  --bg: #f6eedf;
+  --surface: #fffdf6;
+  --elevated: #f1e4cb;
+  --border: #e3d5bc;
+  --amber: #c05a2e;
+  --amber-dim: #8a5b2b;
+  --amber-faint: #f6e3d3;
+  --text: #2a1e12;
+  --text-muted: #6b573d;
+  --on-primary: #fff6ea;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Warm dark — clay-brown, not cold charcoal */
+    --bg: #1a130c;
+    --surface: #241b11;
+    --elevated: #2f2416;
+    --border: #3c2f1e;
+    --amber: #e08a54;
+    --amber-dim: #c99a3c;
+    --amber-faint: #33220f;
+    --text: #f2e8d5;
+    --text-muted: #c4b296;
+    --on-primary: #1a130c;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-border: var(--border);
+  --color-amber: var(--amber);
+  --color-amber-dim: var(--amber-dim);
+  --color-amber-faint: var(--amber-faint);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-on-primary: var(--on-primary);
+  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-outfit);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-outfit), sans-serif;
+}
