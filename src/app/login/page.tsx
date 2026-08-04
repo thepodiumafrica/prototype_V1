@@ -27,7 +27,8 @@ export default function LoginPage() {
 
     if (signInError) return setError(signInError.message);
 
-    router.push("/");
+    // Matches the prototype: signing in lands you on your feed.
+    router.push("/feed");
     router.refresh();
   }
 

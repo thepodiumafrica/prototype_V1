@@ -1,5 +1,13 @@
 // Ported exactly from ThePodium_v5.html's ago()/fmtDate()/wc()/readTime().
 
+import { GREETINGS } from "@/lib/constants";
+
+// Ported exactly from ThePodium_v5.html's todayGreeting(): the same
+// greeting for everyone on a given UTC day, rotating through the list.
+export function todayGreeting(): [string, string] {
+  return GREETINGS[Math.floor(Date.now() / 86400000) % GREETINGS.length];
+}
+
 export function ago(d: string): string {
   const s = (Date.now() - new Date(d).getTime()) / 1000;
   if (s < 60) return "just now";

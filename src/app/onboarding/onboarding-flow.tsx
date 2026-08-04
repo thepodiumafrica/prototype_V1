@@ -81,7 +81,8 @@ export function OnboardingFlow({ userId }: { userId: string }) {
       .from("profiles")
       .update({ interests: Array.from(interests) })
       .eq("id", userId);
-    router.push("/");
+    // Matches the prototype: onboarding ends by landing on your feed.
+    router.push("/feed");
     router.refresh();
   }
 

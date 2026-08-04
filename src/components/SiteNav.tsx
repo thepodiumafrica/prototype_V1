@@ -51,6 +51,15 @@ export async function SiteNav() {
             THE PODIUM
           </span>
         </Link>
+        {/* Matches the prototype's navPages(): Feed only appears once signed in. */}
+        {profile && (
+          <Link
+            href="/feed"
+            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"
+          >
+            Feed
+          </Link>
+        )}
         <Link
           href="/articles"
           className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"

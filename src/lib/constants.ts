@@ -98,3 +98,16 @@ export const PROVERBS: Record<string, [string, string]> = {
   saved: ["Knowledge is like a garden: if it is not cultivated, it cannot be harvested.", "on learning"],
   drafts: ["However long the night, the dawn will break.", "on patience"],
 };
+
+// Ported from ThePodium_v5.html's GREETINGS -- a different African-language
+// greeting each day, shown at the top of the feed.
+export const GREETINGS: [string, string][] = [
+  ["Ẹ káàbọ̀", "Yoruba"],
+  ["Akwaaba", "Twi"],
+  ["Karibu", "Swahili"],
+  ["Sannu da zuwa", "Hausa"],
+  ["Nnọọ", "Igbo"],
+  ["Wamukelekile", "Zulu"],
+  ["Dalal ak jàmm", "Wolof"],
+  ["Mauya", "Shona"],
+];
