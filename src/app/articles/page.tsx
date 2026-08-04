@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CategoryBar } from "@/components/CategoryBar";
 import { GuestBanner } from "@/components/GuestBanner";
 import { PostCard } from "@/components/PostCard";
-import { fetchPublishedPosts } from "@/lib/post-list";
+import { fetchPublishedPosts, fetchBookmarkedIds } from "@/lib/post-list";
 
 export default async function ArticlesPage({
   searchParams,
@@ -16,7 +16,10 @@ export default async function ArticlesPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const posts = await fetchPublishedPosts(supabase, "Article", cat);
+  const [posts, bookmarkedIds] = await Promise.all([
+    fetchPublishedPosts(supabase, "Article", cat),
+    fetchBookmarkedIds(supabase, user?.id),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-2xl px-5 py-8">
@@ -33,7 +36,14 @@ export default async function ArticlesPage({
           No articles in this category yet.
         </p>
       ) : (
-        posts.map((p) => <PostCard key={p.id} post={p} />)
+        posts.map((p) => (
+          <PostCard
+            key={p.id}
+            post={p}
+            signedIn={!!user}
+            bookmarked={bookmarkedIds.has(p.id)}
+          />
+        ))
       )}
     </main>
   );

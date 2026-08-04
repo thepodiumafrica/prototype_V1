@@ -16,6 +16,7 @@ import {
 import { AdinkraIcon } from "@/components/AdinkraIcon";
 import { Tag } from "@/components/Tag";
 import { LikeButton } from "@/components/LikeButton";
+import { BookmarkButton } from "@/components/BookmarkButton";
 import { PostActions } from "@/components/PostActions";
 import { FollowButton } from "@/components/FollowButton";
 import { ViewTracker } from "@/components/ViewTracker";
@@ -72,23 +73,32 @@ export async function PostDetail({
   const isOwner = authUser?.id === creator.id;
 
   let isLiked = false;
+  let isBookmarked = false;
   let isFollowing = false;
   let viewerType: UserType | null = null;
   if (authUser) {
-    const [{ data: likeRow }, { data: viewerProfile }] = await Promise.all([
-      supabase
-        .from("likes")
-        .select("user_id")
-        .eq("user_id", authUser.id)
-        .eq("post_id", post.id)
-        .maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", authUser.id)
-        .single(),
-    ]);
+    const [{ data: likeRow }, { data: bookmarkRow }, { data: viewerProfile }] =
+      await Promise.all([
+        supabase
+          .from("likes")
+          .select("user_id")
+          .eq("user_id", authUser.id)
+          .eq("post_id", post.id)
+          .maybeSingle(),
+        supabase
+          .from("bookmarks")
+          .select("user_id")
+          .eq("user_id", authUser.id)
+          .eq("post_id", post.id)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", authUser.id)
+          .single(),
+      ]);
     isLiked = !!likeRow;
+    isBookmarked = !!bookmarkRow;
     viewerType = (viewerProfile?.user_type as UserType) ?? null;
 
     if (!isOwner) {
@@ -194,6 +204,13 @@ export async function PostDetail({
             signedIn={!!authUser}
           />
           <span className="text-[13px] text-text-dim">◌ {post.ncomments}</span>
+          {authUser && (
+            <BookmarkButton
+              postId={post.id}
+              initialBookmarked={isBookmarked}
+              variant="labeled"
+            />
+          )}
           {showFollow && (
             <div className="ml-auto">
               <FollowButton

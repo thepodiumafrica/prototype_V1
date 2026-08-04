@@ -6,6 +6,7 @@ import { PostCard, type PostCardPost } from "@/components/PostCard";
 import { Proverb } from "@/components/Proverb";
 import { todayGreeting } from "@/lib/format";
 import { rankFeedPosts } from "@/lib/feed-ranking";
+import { fetchBookmarkedIds } from "@/lib/post-list";
 import type { UserType } from "@/lib/constants";
 
 type Row = {
@@ -67,6 +68,7 @@ export default async function FeedPage({
     .eq("follower", authUser.id);
   const followedIds = new Set((followRows ?? []).map((f) => f.following));
   const interests = new Set<string>(profile.interests ?? []);
+  const bookmarkedIds = await fetchBookmarkedIds(supabase, authUser.id);
 
   const { data, error } = await supabase
     .from("posts")
@@ -160,7 +162,11 @@ export default async function FeedPage({
                 · {reason}
               </div>
             )}
-            <PostCard post={post} />
+            <PostCard
+              post={post}
+              signedIn
+              bookmarked={bookmarkedIds.has(post.id)}
+            />
           </div>
         ))
       )}

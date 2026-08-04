@@ -4,7 +4,7 @@ import { GuestBanner } from "@/components/GuestBanner";
 import { PostCard } from "@/components/PostCard";
 import { CreateButton } from "@/components/CreateButton";
 import type { PostType } from "@/components/PostFormModal";
-import { fetchPublishedPosts } from "@/lib/post-list";
+import { fetchPublishedPosts, fetchBookmarkedIds } from "@/lib/post-list";
 import { can } from "@/lib/perms";
 import type { UserType } from "@/lib/constants";
 
@@ -30,7 +30,10 @@ export default async function ForumPage({
     viewerType = (data?.user_type as UserType) ?? null;
   }
 
-  const posts = await fetchPublishedPosts(supabase, "Forum Post", cat);
+  const [posts, bookmarkedIds] = await Promise.all([
+    fetchPublishedPosts(supabase, "Forum Post", cat),
+    fetchBookmarkedIds(supabase, user?.id),
+  ]);
 
   // Matches openCreateModal()'s types array: only offer the kinds of post
   // this account may actually create, same as the nav's + Create button.
@@ -61,7 +64,14 @@ export default async function ForumPage({
       {posts.length === 0 ? (
         <p className="text-sm text-text-muted">No posts yet.</p>
       ) : (
-        posts.map((p) => <PostCard key={p.id} post={p} />)
+        posts.map((p) => (
+          <PostCard
+            key={p.id}
+            post={p}
+            signedIn={!!user}
+            bookmarked={bookmarkedIds.has(p.id)}
+          />
+        ))
       )}
     </main>
   );

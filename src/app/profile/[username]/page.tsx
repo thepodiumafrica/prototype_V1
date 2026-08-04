@@ -15,13 +15,39 @@ import { FollowButton } from "@/components/FollowButton";
 import { CopyReferralButton } from "@/components/CopyReferralButton";
 import { PostCard, type PostCardPost } from "@/components/PostCard";
 import { Proverb } from "@/components/Proverb";
+import { fetchBookmarkedIds } from "@/lib/post-list";
 
-const TABS = ["published", "drafts", "archived"] as const;
+const TABS = ["published", "drafts", "archived", "bookmarks"] as const;
 type Tab = (typeof TABS)[number];
-const TAB_STATUS: Record<Tab, string> = {
+const TAB_STATUS: Partial<Record<Tab, string>> = {
   published: "published",
   drafts: "draft",
   archived: "archived",
+};
+
+type BookmarkedPostRow = {
+  posts: {
+    id: string;
+    otype: "Article" | "Forum Post";
+    category: string;
+    language: string;
+    title: string;
+    content: string;
+    tags: string[];
+    nlikes: number;
+    ncomments: number;
+    views: number;
+    disputed: boolean;
+    dispute_note: string;
+    created_at: string;
+    status: string;
+    creator: string;
+    profiles: {
+      username: string;
+      user_type: UserType;
+      verified: boolean;
+    } | null;
+  } | null;
 };
 
 export default async function ProfilePage({
@@ -87,8 +113,10 @@ export default async function ProfilePage({
     { count: publishedCount },
     { count: draftCount },
     { count: archivedCount },
+    { count: bookmarkCount },
     trustLevel,
-    { data: shownPosts },
+    bookmarkedIds,
+    shownPostsResult,
   ] = await Promise.all([
     supabase
       .from("follows")
@@ -121,38 +149,110 @@ export default async function ProfilePage({
           .eq("status", "archived")
           .neq("otype", "Comment")
       : Promise.resolve({ count: 0 }),
+    isOwn
+      ? supabase
+          .from("bookmarks")
+          .select("post_id", { count: "exact", head: true })
+          .eq("user_id", profile.id)
+      : Promise.resolve({ count: 0 }),
     computeTrust(supabase, profile.id),
-    (() => {
-      let q = supabase
-        .from("posts")
-        .select(postSelect)
-        .eq("creator", profile.id)
-        .eq("status", TAB_STATUS[tab])
-        .neq("otype", "Comment");
-      if (tab === "published") q = q.eq("flagged", false);
-      return q.order("created_at", { ascending: false }).limit(20);
-    })(),
+    fetchBookmarkedIds(supabase, authUser?.id),
+    tab === "bookmarks"
+      ? supabase
+          .from("bookmarks")
+          .select(
+            `posts(${postSelect}, creator, profiles!posts_creator_fkey(username, user_type, verified))`,
+          )
+          .eq("user_id", profile.id)
+          .order("created_at", { ascending: false })
+          .limit(20)
+      : (() => {
+          let q = supabase
+            .from("posts")
+            .select(postSelect)
+            .eq("creator", profile.id)
+            .eq("status", TAB_STATUS[tab])
+            .neq("otype", "Comment");
+          if (tab === "published") q = q.eq("flagged", false);
+          return q.order("created_at", { ascending: false }).limit(20);
+        })(),
   ]);
 
-  const posts: PostCardPost[] = (shownPosts ?? []).map((p) => ({
-    id: p.id,
-    creator: profile.username,
-    creator_type: profile.user_type as UserType,
-    creator_verified: profile.verified,
-    otype: p.otype as "Article" | "Forum Post",
-    status: p.status,
-    category: p.category,
-    language: p.language,
-    title: p.title,
-    content: p.content,
-    tags: p.tags ?? [],
-    nlikes: p.nlikes,
-    ncomments: p.ncomments,
-    views: p.views,
-    disputed: p.disputed,
-    dispute_note: p.dispute_note,
-    created_at: p.created_at,
-  }));
+  if (shownPostsResult.error)
+    console.error("profile posts query failed:", shownPostsResult.error);
+
+  // Bookmarked posts can belong to anyone, unlike the other three tabs
+  // (which are always the profile owner's own posts) -- so ownership for
+  // the owner-only action buttons has to be checked per post here, not
+  // assumed from isOwn.
+  const bookmarkedPostRows: BookmarkedPostRow[] =
+    tab === "bookmarks"
+      ? ((shownPostsResult.data ?? []) as unknown as BookmarkedPostRow[]).filter(
+          (r) => r.posts && r.posts.profiles,
+        )
+      : [];
+  const postOwnerIds: string[] = bookmarkedPostRows.map((r) => r.posts!.creator);
+
+  const posts: PostCardPost[] =
+    tab === "bookmarks"
+      ? bookmarkedPostRows.map((r) => {
+          const p = r.posts!;
+          return {
+            id: p.id,
+            creator: p.profiles!.username,
+            creator_type: p.profiles!.user_type,
+            creator_verified: p.profiles!.verified,
+            otype: p.otype,
+            status: p.status,
+            category: p.category,
+            language: p.language,
+            title: p.title,
+            content: p.content,
+            tags: p.tags ?? [],
+            nlikes: p.nlikes,
+            ncomments: p.ncomments,
+            views: p.views,
+            disputed: p.disputed,
+            dispute_note: p.dispute_note,
+            created_at: p.created_at,
+          };
+        })
+      : (
+          (shownPostsResult.data ?? []) as unknown as {
+            id: string;
+            otype: string;
+            category: string;
+            language: string;
+            title: string;
+            content: string;
+            tags: string[];
+            nlikes: number;
+            ncomments: number;
+            views: number;
+            disputed: boolean;
+            dispute_note: string;
+            created_at: string;
+            status: string;
+          }[]
+        ).map((p) => ({
+          id: p.id,
+          creator: profile.username,
+          creator_type: profile.user_type as UserType,
+          creator_verified: profile.verified,
+          otype: p.otype as "Article" | "Forum Post",
+          status: p.status,
+          category: p.category,
+          language: p.language,
+          title: p.title,
+          content: p.content,
+          tags: p.tags ?? [],
+          nlikes: p.nlikes,
+          ncomments: p.ncomments,
+          views: p.views,
+          disputed: p.disputed,
+          dispute_note: p.dispute_note,
+          created_at: p.created_at,
+        }));
 
   const canShowFollow =
     authUser &&
@@ -164,6 +264,7 @@ export default async function ProfilePage({
     published: publishedCount ?? 0,
     drafts: draftCount ?? 0,
     archived: archivedCount ?? 0,
+    bookmarks: bookmarkCount ?? 0,
   };
 
   return (
@@ -301,10 +402,25 @@ export default async function ProfilePage({
         {posts.length === 0 ? (
           <div className="text-sm text-text-muted/80">
             {tab === "drafts" && <Proverb forKey="drafts" />}
-            No {tab === "published" ? "posts" : tab} yet.
+            {tab === "bookmarks" && <Proverb forKey="saved" />}
+            No {tab === "published" ? "posts" : tab === "bookmarks" ? "saved articles" : tab} yet.
           </div>
         ) : (
-          posts.map((p) => <PostCard key={p.id} post={p} isOwner={isOwn} />)
+          posts.map((p, i) => (
+            <PostCard
+              key={p.id}
+              post={p}
+              isOwner={
+                tab === "bookmarks"
+                  ? authUser?.id === postOwnerIds[i]
+                  : isOwn
+              }
+              signedIn={!!authUser}
+              bookmarked={
+                tab === "bookmarks" ? true : bookmarkedIds.has(p.id)
+              }
+            />
+          ))
         )}
       </div>
     </main>

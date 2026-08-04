@@ -3,6 +3,7 @@ import { Avatar } from "@/components/Avatar";
 import { TypeBadge, VerifiedBadge, LangBadge, StatusBadge } from "@/components/Badge";
 import { Tag } from "@/components/Tag";
 import { PostActions } from "@/components/PostActions";
+import { BookmarkButton } from "@/components/BookmarkButton";
 import { ago, readTime } from "@/lib/format";
 import type { UserType } from "@/lib/constants";
 
@@ -26,14 +27,18 @@ export interface PostCardPost {
   created_at: string;
 }
 
-// Ported from ThePodium_v5.html's cardHtml() (Article-only: no bookmark
-// button, no series/poll badges -- those belong to features not built yet).
+// Ported from ThePodium_v5.html's cardHtml() (no series/poll badges --
+// those belong to features not built yet).
 export function PostCard({
   post,
   isOwner = false,
+  signedIn = false,
+  bookmarked = false,
 }: {
   post: PostCardPost;
   isOwner?: boolean;
+  signedIn?: boolean;
+  bookmarked?: boolean;
 }) {
   const isDraft = post.status === "draft";
   const isArc = post.status === "archived";
@@ -106,6 +111,9 @@ export function PostCard({
           )}
           {post.views > 0 && (
             <span className="text-[11px] text-text-dim">👁 {post.views}</span>
+          )}
+          {signedIn && (
+            <BookmarkButton postId={post.id} initialBookmarked={bookmarked} />
           )}
         </div>
       </div>

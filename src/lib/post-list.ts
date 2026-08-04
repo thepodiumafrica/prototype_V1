@@ -70,3 +70,18 @@ export async function fetchPublishedPosts(
       created_at: r.created_at,
     }));
 }
+
+// Shared by every page that renders PostCard, to know which of the shown
+// posts the signed-in viewer has already bookmarked.
+export async function fetchBookmarkedIds(
+  supabase: SupabaseClient,
+  userId: string | undefined,
+): Promise<Set<string>> {
+  if (!userId) return new Set();
+  const { data, error } = await supabase
+    .from("bookmarks")
+    .select("post_id")
+    .eq("user_id", userId);
+  if (error) console.error("bookmarked-ids query failed:", error);
+  return new Set((data ?? []).map((b) => b.post_id as string));
+}
