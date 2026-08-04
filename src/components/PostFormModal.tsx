@@ -38,17 +38,31 @@ function wrapSelection(ta: HTMLTextAreaElement, before: string, after: string) {
   ta.focus();
 }
 
-export function ArticleFormModal({
+export type PostType = "Article" | "Forum Post";
+
+export function PostFormModal({
   mode,
   postId,
+  availableTypes = ["Article"],
+  defaultType,
   onClose,
 }: {
   mode: "create" | "edit";
   postId?: string;
+  /** Which types this user may create -- from the PERMS matrix. */
+  availableTypes?: PostType[];
+  defaultType?: PostType;
   onClose: () => void;
 }) {
   const router = useRouter();
   const contentRef = useRef<HTMLTextAreaElement>(null);
+  // Matches openCreateModal(): honour the requested default when the user
+  // is actually allowed that type, else fall back to their first option.
+  const [postType, setPostType] = useState<PostType>(
+    defaultType && availableTypes.includes(defaultType)
+      ? defaultType
+      : (availableTypes[0] ?? "Article"),
+  );
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("technology");
   const [language, setLanguage] = useState("en");
@@ -119,7 +133,7 @@ export function ArticleFormModal({
 
     const { error: insertError } = await supabase.from("posts").insert({
       creator: user.id,
-      otype: "Article",
+      otype: postType,
       status: publishStatus,
       category,
       language,
@@ -132,7 +146,7 @@ export function ArticleFormModal({
     if (insertError) return setError(insertError.message);
 
     onClose();
-    router.push("/articles");
+    router.push(postType === "Article" ? "/articles" : "/forum");
     router.refresh();
   }
 
@@ -188,6 +202,25 @@ export function ArticleFormModal({
         <p className="text-sm text-text-muted">Loading…</p>
       ) : (
         <>
+          {mode === "create" && availableTypes.length > 1 && (
+            <div className="mb-3 flex gap-2">
+              {availableTypes.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setPostType(t)}
+                  className={`rounded-md border px-3.5 py-1.5 text-[13px] font-medium ${
+                    postType === t
+                      ? "border-amber bg-amber-faint text-amber"
+                      : "border-border text-text-muted"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="mb-1 flex flex-wrap gap-2.5">
             <div className="min-w-[160px] flex-1">
               <label className="form-label mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">

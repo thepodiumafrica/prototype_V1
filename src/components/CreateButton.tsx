@@ -1,13 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { ArticleFormModal } from "@/components/ArticleFormModal";
+import { PostFormModal, type PostType } from "@/components/PostFormModal";
 
 // Ported from ThePodium_v5.html's nav "+ Create" button / openCreateModal().
-// Scoped to Article only for now -- Forum Post isn't offered as a type
-// here yet since the Forum feature (where a created forum post would even
-// be visible) doesn't exist yet.
-export function CreateButton() {
+// availableTypes comes from the PERMS matrix (postArticle / createForum),
+// so a reader only ever gets "Forum Post".
+export function CreateButton({
+  availableTypes = ["Article", "Forum Post"],
+  defaultType,
+  label = "+ Create",
+}: {
+  availableTypes?: PostType[];
+  defaultType?: PostType;
+  label?: string;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -15,12 +22,17 @@ export function CreateButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md bg-amber px-3 py-1.5 text-sm font-semibold text-on-primary"
+        className="flex-shrink-0 rounded-md bg-amber px-3 py-1.5 text-sm font-semibold text-on-primary"
       >
-        + Create
+        {label}
       </button>
       {open && (
-        <ArticleFormModal mode="create" onClose={() => setOpen(false)} />
+        <PostFormModal
+          mode="create"
+          availableTypes={availableTypes}
+          defaultType={defaultType}
+          onClose={() => setOpen(false)}
+        />
       )}
     </>
   );

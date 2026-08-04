@@ -79,7 +79,7 @@ export default async function ProfilePage({
   }
 
   const postSelect =
-    "id, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, status";
+    "id, otype, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, status";
 
   const [
     { count: followerCount },
@@ -139,6 +139,7 @@ export default async function ProfilePage({
     creator: profile.username,
     creator_type: profile.user_type as UserType,
     creator_verified: profile.verified,
+    otype: p.otype as "Article" | "Forum Post",
     status: p.status,
     category: p.category,
     language: p.language,

@@ -4,6 +4,7 @@ import { signOut } from "@/lib/actions/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { CreateButton } from "@/components/CreateButton";
+import type { PostType } from "@/components/PostFormModal";
 import { can } from "@/lib/perms";
 import type { UserType } from "@/lib/constants";
 
@@ -22,6 +23,15 @@ export async function SiteNav() {
       .single();
     profile = data;
   }
+
+  // Matches openCreateModal()'s types array: which kinds of post this
+  // account may create, straight from the PERMS matrix.
+  const availableTypes: PostType[] = profile
+    ? ([
+        can(profile.user_type, "postArticle") ? "Article" : null,
+        can(profile.user_type, "createForum") ? "Forum Post" : null,
+      ].filter(Boolean) as PostType[])
+    : [];
 
   return (
     <nav className="flex h-[54px] items-center justify-between border-b border-border bg-surface/90 px-5 backdrop-blur">
@@ -47,11 +57,19 @@ export async function SiteNav() {
         >
           Articles
         </Link>
+        <Link
+          href="/forum"
+          className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"
+        >
+          Forum
+        </Link>
       </div>
 
       <div className="flex items-center gap-2">
         <ThemeToggle />
-        {profile && can(profile.user_type, "postArticle") && <CreateButton />}
+        {profile && availableTypes.length > 0 && (
+          <CreateButton availableTypes={availableTypes} />
+        )}
         {profile ? (
           <>
             <Link

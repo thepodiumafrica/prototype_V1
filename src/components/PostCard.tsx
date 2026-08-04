@@ -11,6 +11,7 @@ export interface PostCardPost {
   creator: string; // username
   creator_type: UserType;
   creator_verified: boolean;
+  otype: "Article" | "Forum Post";
   status: string;
   category: string;
   language: string;
@@ -92,7 +93,7 @@ export function PostCard({
           <Tag key={t} label={t} />
         ))}
         <div className="ml-auto flex items-center gap-2.5">
-          {post.status === "published" && (
+          {post.otype === "Article" && post.status === "published" && (
             <span className="text-[11px] text-text-dim">
               {readTime(post.content)}
             </span>
@@ -115,5 +116,9 @@ export function PostCard({
 
   if (isDraft || isArc) return body;
 
-  return <Link href={`/article/${post.id}`}>{body}</Link>;
+  // Matches the prototype: Articles open the article view, Forum Posts
+  // open the thread view.
+  const href =
+    post.otype === "Article" ? `/article/${post.id}` : `/thread/${post.id}`;
+  return <Link href={href}>{body}</Link>;
 }

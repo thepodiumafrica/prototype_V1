@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArticleFormModal } from "@/components/ArticleFormModal";
+import { PostFormModal } from "@/components/PostFormModal";
 
 // Ported from ThePodium_v5.html's owner-only card/detail actions:
 // Edit / Publish / Archive / Restore.
@@ -72,7 +72,7 @@ export function PostActions({
       )}
 
       {editing && (
-        <ArticleFormModal
+        <PostFormModal
           mode="edit"
           postId={postId}
           onClose={() => setEditing(false)}

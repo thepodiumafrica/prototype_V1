@@ -73,5 +73,9 @@ export async function createTestUser(
 export async function deleteTestUser(user: TestUser | undefined) {
   // Deleting the auth user cascades: profiles -> posts/follows/etc. all
   // clean up automatically via "on delete cascade" foreign keys.
-  if (user) await admin.auth.admin.deleteUser(user.id);
+  if (!user) return;
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  if (error) {
+    console.error(`Failed to delete test user ${user.username}:`, error.message);
+  }
 }
