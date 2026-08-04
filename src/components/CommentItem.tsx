@@ -5,11 +5,13 @@ import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { CommentLikeButton } from "@/components/CommentLikeButton";
 import { CommentComposer } from "@/components/CommentComposer";
+import { FlagButton } from "@/components/FlagButton";
 import { ago } from "@/lib/format";
 
 export interface ThreadComment {
   id: string;
   creator: string;
+  creatorId: string;
   content: string;
   created_at: string;
   nlikes: number;
@@ -19,14 +21,17 @@ export interface ThreadComment {
 
 // Ported from the comment block inside ThePodium_v5.html's
 // renderPostDetail(): one comment, its replies (one level only), a like
-// heart on each, and a toggleable reply box.
+// heart on each, and a toggleable reply box. Only top-level comments get a
+// flag button in the prototype -- replies don't.
 export function CommentItem({
   comment,
   signedIn,
+  viewerId,
   canComment,
 }: {
   comment: ThreadComment;
   signedIn: boolean;
+  viewerId: string | null;
   canComment: boolean;
 }) {
   const [showReply, setShowReply] = useState(false);
@@ -45,6 +50,13 @@ export function CommentItem({
         <span className="text-[11px] text-text-dim">
           · {ago(comment.created_at)}
         </span>
+        {signedIn && viewerId && viewerId !== comment.creatorId && (
+          <FlagButton
+            entityId={comment.id}
+            entityCreatorId={comment.creatorId}
+            variant="icon"
+          />
+        )}
       </div>
 
       <p className="text-sm leading-relaxed text-text-muted">

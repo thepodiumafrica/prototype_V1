@@ -17,6 +17,7 @@ import { AdinkraIcon } from "@/components/AdinkraIcon";
 import { Tag } from "@/components/Tag";
 import { LikeButton } from "@/components/LikeButton";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import { FlagButton } from "@/components/FlagButton";
 import { PostActions } from "@/components/PostActions";
 import { FollowButton } from "@/components/FollowButton";
 import { ViewTracker } from "@/components/ViewTracker";
@@ -76,30 +77,42 @@ export async function PostDetail({
   let isBookmarked = false;
   let isFollowing = false;
   let viewerType: UserType | null = null;
+  let myFlagStatus: string | null = null;
   if (authUser) {
-    const [{ data: likeRow }, { data: bookmarkRow }, { data: viewerProfile }] =
-      await Promise.all([
-        supabase
-          .from("likes")
-          .select("user_id")
-          .eq("user_id", authUser.id)
-          .eq("post_id", post.id)
-          .maybeSingle(),
-        supabase
-          .from("bookmarks")
-          .select("user_id")
-          .eq("user_id", authUser.id)
-          .eq("post_id", post.id)
-          .maybeSingle(),
-        supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", authUser.id)
-          .single(),
-      ]);
+    const [
+      { data: likeRow },
+      { data: bookmarkRow },
+      { data: viewerProfile },
+      { data: flagRow },
+    ] = await Promise.all([
+      supabase
+        .from("likes")
+        .select("user_id")
+        .eq("user_id", authUser.id)
+        .eq("post_id", post.id)
+        .maybeSingle(),
+      supabase
+        .from("bookmarks")
+        .select("user_id")
+        .eq("user_id", authUser.id)
+        .eq("post_id", post.id)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", authUser.id)
+        .single(),
+      supabase
+        .from("flags")
+        .select("status")
+        .eq("reporter", authUser.id)
+        .eq("entity_id", post.id)
+        .maybeSingle(),
+    ]);
     isLiked = !!likeRow;
     isBookmarked = !!bookmarkRow;
     viewerType = (viewerProfile?.user_type as UserType) ?? null;
+    myFlagStatus = flagRow?.status ?? null;
 
     if (!isOwner) {
       const { data: followRow } = await supabase
@@ -155,9 +168,23 @@ export async function PostDetail({
               {post.views ?? 0}
             </div>
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex items-center gap-1.5">
             <LangBadge lang={post.language} />
             {isOwner && <StatusBadge status={post.status} />}
+            {authUser && !isOwner && !myFlagStatus && (
+              <FlagButton
+                entityId={post.id}
+                entityCreatorId={creator.id}
+                variant="ghost"
+              />
+            )}
+            {myFlagStatus && (
+              <FlagButton
+                entityId={post.id}
+                entityCreatorId={creator.id}
+                alreadyFlaggedStatus={myFlagStatus}
+              />
+            )}
           </div>
         </div>
 

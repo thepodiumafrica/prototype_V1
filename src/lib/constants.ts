@@ -88,6 +88,12 @@ export const ADINKRA: Record<string, { sym: string; name: string; proverb: strin
   careers: { sym: "esenetekrema", name: "Ese ne Tekrema", proverb: "The teeth and the tongue — we advance through interdependence" },
 };
 
+// Ported from ThePodium_v5.html's FLAG_REASONS.
+export const FLAG_REASONS = [
+  "Hate speech", "Misinformation", "Spam", "Harassment",
+  "Inappropriate content", "Copyright violation", "Other",
+] as const;
+
 // Ported from ThePodium_v5.html's PROVERBS -- shown in empty states.
 export const PROVERBS: Record<string, [string, string]> = {
   feed: ["However far the stream flows, it never forgets its source.", "on beginnings"],

@@ -11,7 +11,7 @@ type Row = {
   content: string;
   created_at: string;
   nlikes: number;
-  profiles: { username: string } | null;
+  profiles: { id: string; username: string } | null;
 };
 
 // Ported from the comments section of ThePodium_v5.html's
@@ -32,7 +32,7 @@ export async function CommentThread({
   const { data: topRows, error } = await supabase
     .from("posts")
     .select(
-      "id, parent_id, content, created_at, nlikes, profiles!posts_creator_fkey(username)",
+      "id, parent_id, content, created_at, nlikes, profiles!posts_creator_fkey(id, username)",
     )
     .eq("otype", "Comment")
     .eq("parent_id", postId)
@@ -49,7 +49,7 @@ export async function CommentThread({
     const { data, error: replyError } = await supabase
       .from("posts")
       .select(
-        "id, parent_id, content, created_at, nlikes, profiles!posts_creator_fkey(username)",
+        "id, parent_id, content, created_at, nlikes, profiles!posts_creator_fkey(id, username)",
       )
       .eq("otype", "Comment")
       .in(
@@ -78,6 +78,7 @@ export async function CommentThread({
   const toComment = (r: Row) => ({
     id: r.id,
     creator: r.profiles?.username ?? "unknown",
+    creatorId: r.profiles?.id ?? "",
     content: r.content,
     created_at: r.created_at,
     nlikes: r.nlikes,
@@ -103,6 +104,7 @@ export async function CommentThread({
           key={c.id}
           comment={c}
           signedIn={!!viewerId}
+          viewerId={viewerId}
           canComment={canComment}
         />
       ))}

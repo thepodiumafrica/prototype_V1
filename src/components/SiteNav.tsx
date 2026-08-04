@@ -14,11 +14,11 @@ export async function SiteNav() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let profile: { username: string; user_type: UserType } | null = null;
+  let profile: { username: string; user_type: UserType; is_mod: boolean } | null = null;
   if (user) {
     const { data } = await supabase
       .from("profiles")
-      .select("username, user_type")
+      .select("username, user_type, is_mod")
       .eq("id", user.id)
       .single();
     profile = data;
@@ -72,6 +72,15 @@ export async function SiteNav() {
         >
           Forum
         </Link>
+        {/* Matches navPages(): only moderators ever see this link at all. */}
+        {profile?.is_mod && (
+          <Link
+            href="/modqueue"
+            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"
+          >
+            Mod
+          </Link>
+        )}
       </div>
 
       <div className="flex items-center gap-2">

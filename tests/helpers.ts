@@ -70,6 +70,21 @@ export async function createTestUser(
   return { id: data.user.id, username, client };
 }
 
+// The one legitimate use of the admin client for "app data" rather than
+// user lifecycle: there is no user-facing path to become a moderator (no
+// self-service RLS policy allows it, by design -- see is_mod's absence
+// from the profiles UPDATE policy). A real moderator is made by an admin
+// flipping this flag directly in the database, so that's what this does.
+export async function makeModerator(user: TestUser) {
+  const { error } = await admin
+    .from("profiles")
+    .update({ is_mod: true })
+    .eq("id", user.id);
+  if (error) {
+    throw new Error(`Failed to make ${user.username} a moderator: ${error.message}`);
+  }
+}
+
 export async function deleteTestUser(user: TestUser | undefined) {
   // Deleting the auth user cascades: profiles -> posts/follows/etc. all
   // clean up automatically via "on delete cascade" foreign keys.
