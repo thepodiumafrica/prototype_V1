@@ -6,6 +6,7 @@
   --surface: #fffdf6;
   --elevated: #f1e4cb;
   --border: #e3d5bc;
+  --border-light: #cbb68f;
   --amber: #c05a2e;
   --amber-dim: #8a5b2b;
   --amber-faint: #f6e3d3;
@@ -32,6 +33,13 @@
   --gray-tint: #ede8dc;
   --gray-border: #c8bfa9;
   --gray-text: #6f6a5c;
+  --text-dim: #8f7856;
+  --purple: #6f55a0;
+  --purple-tint: #e9e2f0;
+  --purple-border: #c0afd6;
+  --warn-tint: #f8ecd2;
+  --warn-border: #d9b36a;
+  --warn-text: #7a5410;
 }
 
 /* Matches ThePodium_v5.html: theme is a manual toggle (STATE.theme,
@@ -43,6 +51,7 @@ html[data-theme="dark"] {
   --surface: #241b11;
   --elevated: #2f2416;
   --border: #3c2f1e;
+  --border-light: #4e3e28;
   --amber: #e08a54;
   --amber-dim: #c99a3c;
   --amber-faint: #33220f;
@@ -66,6 +75,13 @@ html[data-theme="dark"] {
   --gray-tint: #2c2a24;
   --gray-border: #57534a;
   --gray-text: #9b968a;
+  --text-dim: #8a7a5f;
+  --purple: #b49fd8;
+  --purple-tint: #2a2138;
+  --purple-border: #584775;
+  --warn-tint: #3a2e12;
+  --warn-border: #8a6a22;
+  --warn-text: #e8c878;
 }
 
 @theme inline {
@@ -73,6 +89,7 @@ html[data-theme="dark"] {
   --color-surface: var(--surface);
   --color-elevated: var(--elevated);
   --color-border: var(--border);
+  --color-border-light: var(--border-light);
   --color-amber: var(--amber);
   --color-amber-dim: var(--amber-dim);
   --color-amber-faint: var(--amber-faint);
@@ -96,6 +113,13 @@ html[data-theme="dark"] {
   --color-gray-tint: var(--gray-tint);
   --color-gray-border: var(--gray-border);
   --color-gray-text: var(--gray-text);
+  --color-text-dim: var(--text-dim);
+  --color-purple: var(--purple);
+  --color-purple-tint: var(--purple-tint);
+  --color-purple-border: var(--purple-border);
+  --color-warn-tint: var(--warn-tint);
+  --color-warn-border: var(--warn-border);
+  --color-warn-text: var(--warn-text);
   --font-serif: var(--font-fraunces);
   --font-sans: var(--font-outfit);
 }

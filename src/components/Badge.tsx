@@ -1,5 +1,5 @@
 import type { UserType } from "@/lib/constants";
-import { TYPE_LABEL, TRUST_LABELS } from "@/lib/constants";
+import { TYPE_LABEL, TRUST_LABELS, LANGS } from "@/lib/constants";
 
 const base =
   "inline-flex items-center rounded-[3px] border px-1.5 py-0.5 text-[10px] font-bold";
@@ -81,4 +81,27 @@ export function LocationBadge({
     );
   }
   return null;
+}
+
+// Ported from ThePodium_v5.html's langBadge().
+export function LangBadge({ lang }: { lang: string | null }) {
+  if (!lang || lang === "en") return null;
+  const l = LANGS.find((x) => x.id === lang);
+  if (!l) return null;
+  return (
+    <span className={`${base} text-purple bg-purple-tint border-purple-border`}>
+      {l.l}
+    </span>
+  );
+}
+
+// Ported from ThePodium_v5.html's badge-draft/badge-published/badge-archived.
+export function StatusBadge({ status }: { status: string }) {
+  const cls =
+    status === "published"
+      ? "text-green bg-green-tint border-green-border"
+      : status === "archived"
+        ? "text-text-dim bg-elevated border-border"
+        : "text-amber-dim bg-amber-faint border-accent-border";
+  return <span className={`${base} ${cls}`}>{status.toUpperCase()}</span>;
 }

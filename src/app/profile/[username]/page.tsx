@@ -13,13 +13,26 @@ import {
 import { Avatar } from "@/components/Avatar";
 import { FollowButton } from "@/components/FollowButton";
 import { CopyReferralButton } from "@/components/CopyReferralButton";
+import { PostCard, type PostCardPost } from "@/components/PostCard";
+import { Proverb } from "@/components/Proverb";
+
+const TABS = ["published", "drafts", "archived"] as const;
+type Tab = (typeof TABS)[number];
+const TAB_STATUS: Record<Tab, string> = {
+  published: "published",
+  drafts: "draft",
+  archived: "archived",
+};
 
 export default async function ProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { username } = await params;
+  const { tab: tabParam } = await searchParams;
   const supabase = await createClient();
 
   const { data: profile } = await supabase
@@ -42,6 +55,8 @@ export default async function ProfilePage({
     data: { user: authUser },
   } = await supabase.auth.getUser();
   const isOwn = authUser?.id === profile.id;
+  const tab: Tab =
+    isOwn && TABS.includes(tabParam as Tab) ? (tabParam as Tab) : "published";
 
   let viewerType: UserType | null = null;
   let isFollowing = false;
@@ -63,12 +78,17 @@ export default async function ProfilePage({
     isFollowing = !!followRow;
   }
 
+  const postSelect =
+    "id, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, status";
+
   const [
     { count: followerCount },
     { count: followingCount },
     { count: publishedCount },
+    { count: draftCount },
+    { count: archivedCount },
     trustLevel,
-    { data: posts },
+    { data: shownPosts },
   ] = await Promise.all([
     supabase
       .from("follows")
@@ -85,23 +105,65 @@ export default async function ProfilePage({
       .eq("status", "published")
       .eq("flagged", false)
       .neq("otype", "Comment"),
+    isOwn
+      ? supabase
+          .from("posts")
+          .select("id", { count: "exact", head: true })
+          .eq("creator", profile.id)
+          .eq("status", "draft")
+          .neq("otype", "Comment")
+      : Promise.resolve({ count: 0 }),
+    isOwn
+      ? supabase
+          .from("posts")
+          .select("id", { count: "exact", head: true })
+          .eq("creator", profile.id)
+          .eq("status", "archived")
+          .neq("otype", "Comment")
+      : Promise.resolve({ count: 0 }),
     computeTrust(supabase, profile.id),
-    supabase
-      .from("posts")
-      .select("id, title, category, created_at")
-      .eq("creator", profile.id)
-      .eq("status", "published")
-      .eq("flagged", false)
-      .neq("otype", "Comment")
-      .order("created_at", { ascending: false })
-      .limit(20),
+    (() => {
+      let q = supabase
+        .from("posts")
+        .select(postSelect)
+        .eq("creator", profile.id)
+        .eq("status", TAB_STATUS[tab])
+        .neq("otype", "Comment");
+      if (tab === "published") q = q.eq("flagged", false);
+      return q.order("created_at", { ascending: false }).limit(20);
+    })(),
   ]);
+
+  const posts: PostCardPost[] = (shownPosts ?? []).map((p) => ({
+    id: p.id,
+    creator: profile.username,
+    creator_type: profile.user_type as UserType,
+    creator_verified: profile.verified,
+    status: p.status,
+    category: p.category,
+    language: p.language,
+    title: p.title,
+    content: p.content,
+    tags: p.tags ?? [],
+    nlikes: p.nlikes,
+    ncomments: p.ncomments,
+    views: p.views,
+    disputed: p.disputed,
+    dispute_note: p.dispute_note,
+    created_at: p.created_at,
+  }));
 
   const canShowFollow =
     authUser &&
     !isOwn &&
     can(profile.user_type as UserType, "beFollowed") &&
     can(viewerType, "follow");
+
+  const tabCounts: Record<Tab, number> = {
+    published: publishedCount ?? 0,
+    drafts: draftCount ?? 0,
+    archived: archivedCount ?? 0,
+  };
 
   return (
     <main className="mx-auto w-full max-w-2xl px-5 py-8">
@@ -216,25 +278,32 @@ export default async function ProfilePage({
         )}
       </div>
 
-      <div className="mt-5">
-        {!posts || posts.length === 0 ? (
-          <p className="text-sm text-text-muted/80">No posts yet.</p>
+      {isOwn && (
+        <div className="mb-4 mt-5 flex flex-wrap gap-1.5">
+          {TABS.map((t) => (
+            <Link
+              key={t}
+              href={`/profile/${username}${t === "published" ? "" : `?tab=${t}`}`}
+              className={`rounded-md border px-3 py-1.5 text-xs font-semibold capitalize ${
+                tab === t
+                  ? "border-amber bg-amber-faint text-amber"
+                  : "border-border text-text-muted"
+              }`}
+            >
+              {t} ({tabCounts[t]})
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <div className={isOwn ? "" : "mt-5"}>
+        {posts.length === 0 ? (
+          <div className="text-sm text-text-muted/80">
+            {tab === "drafts" && <Proverb forKey="drafts" />}
+            No {tab === "published" ? "posts" : tab} yet.
+          </div>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {posts.map((p) => (
-              <li
-                key={p.id}
-                className="rounded-lg border border-border bg-surface p-3.5"
-              >
-                <div className="mb-1 text-[11px] uppercase tracking-wide text-amber-dim">
-                  {p.category}
-                </div>
-                <div className="font-serif text-sm font-semibold text-text">
-                  {p.title}
-                </div>
-              </li>
-            ))}
-          </ul>
+          posts.map((p) => <PostCard key={p.id} post={p} isOwner={isOwn} />)
         )}
       </div>
     </main>
