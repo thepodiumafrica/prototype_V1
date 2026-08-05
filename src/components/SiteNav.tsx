@@ -4,6 +4,7 @@ import { signOut } from "@/lib/actions/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { CreateButton } from "@/components/CreateButton";
+import { NotificationBell, type NotificationRow } from "@/components/NotificationBell";
 import type { PostType } from "@/components/PostFormModal";
 import { can } from "@/lib/perms";
 import type { UserType } from "@/lib/constants";
@@ -32,6 +33,26 @@ export async function SiteNav() {
         can(profile.user_type, "createForum") ? "Forum Post" : null,
       ].filter(Boolean) as PostType[])
     : [];
+
+  let notifications: NotificationRow[] = [];
+  let unreadCount = 0;
+  if (user) {
+    const [{ data: notifRows }, { count }] = await Promise.all([
+      supabase
+        .from("notifications")
+        .select("id, type, text, entity_id, read, created_at, posts:entity_id(otype)")
+        .eq("for_user", user.id)
+        .order("created_at", { ascending: false })
+        .limit(12),
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("for_user", user.id)
+        .eq("read", false),
+    ]);
+    notifications = (notifRows ?? []) as unknown as NotificationRow[];
+    unreadCount = count ?? 0;
+  }
 
   return (
     <nav className="flex h-[54px] items-center justify-between border-b border-border bg-surface/90 px-5 backdrop-blur">
@@ -87,6 +108,13 @@ export async function SiteNav() {
         <ThemeToggle />
         {profile && availableTypes.length > 0 && (
           <CreateButton availableTypes={availableTypes} />
+        )}
+        {profile && user && (
+          <NotificationBell
+            userId={user.id}
+            initialNotifications={notifications}
+            initialUnreadCount={unreadCount}
+          />
         )}
         {profile ? (
           <>

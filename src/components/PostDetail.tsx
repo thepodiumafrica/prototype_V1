@@ -17,6 +17,7 @@ import { AdinkraIcon } from "@/components/AdinkraIcon";
 import { Tag } from "@/components/Tag";
 import { LikeButton } from "@/components/LikeButton";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { FlagButton } from "@/components/FlagButton";
 import { PostActions } from "@/components/PostActions";
 import { FollowButton } from "@/components/FollowButton";
@@ -125,6 +126,13 @@ export async function PostDetail({
     }
   }
 
+  // Ported from shareWhatsApp() exactly -- no link in the message, just
+  // title + excerpt + a fixed sign-off, matching the prototype.
+  const whatsappText = `${post.title}\n\n${post.content
+    .replace(/[#>*`[\]()]/g, "")
+    .slice(0, 120)}…\n\nRead on The Podium`;
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
+
   const trustLevel = await computeTrust(supabase, creator.id);
   const adinkra = ADINKRA[post.category];
   const showFollow =
@@ -231,6 +239,15 @@ export async function PostDetail({
             signedIn={!!authUser}
           />
           <span className="text-[13px] text-text-dim">◌ {post.ncomments}</span>
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-text"
+          >
+            WhatsApp ↗
+          </a>
+          <CopyLinkButton />
           {authUser && (
             <BookmarkButton
               postId={post.id}
