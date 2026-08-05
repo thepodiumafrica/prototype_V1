@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { validatePassword, validateUsername } from "@/lib/validate-password";
+import { validatePassword, validateUsername, validateAge } from "@/lib/validate-password";
 import { USER_TYPES, type UserType } from "@/lib/constants";
 
 export default function SignUpPage() {
@@ -12,6 +12,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [userType, setUserType] = useState<UserType>("reader");
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
@@ -26,6 +27,9 @@ export default function SignUpPage() {
 
     const passwordError = validatePassword(password);
     if (passwordError) return setError(passwordError);
+
+    const ageError = validateAge(dateOfBirth);
+    if (ageError) return setError(ageError);
 
     setPending(true);
     const supabase = createClient();
@@ -44,12 +48,29 @@ export default function SignUpPage() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { username, user_type: userType } },
+      options: {
+        data: { username, user_type: userType, date_of_birth: dateOfBirth },
+      },
     });
 
     setPending(false);
 
-    if (signUpError) return setError(signUpError.message);
+    if (signUpError) {
+      // A rejection raised inside handle_new_user() (duplicate username,
+      // bad user_type, failing the age gate) reaches the client as an
+      // opaque transport error with no usable message text -- a known
+      // rough edge of how Supabase Auth surfaces trigger failures, not
+      // specific to any one check. The client-side validation above
+      // already catches the normal cases before ever calling signUp(),
+      // so this fallback only matters if that's somehow bypassed.
+      const msg = signUpError.message?.trim();
+      const isOpaque = !msg || msg === "{}";
+      return setError(
+        isOpaque
+          ? "We couldn't create your account. Please double-check your details and try again."
+          : msg,
+      );
+    }
 
     if (data.session) {
       router.push("/onboarding");
@@ -115,6 +136,19 @@ export default function SignUpPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
             />
+          </Field>
+
+          <Field label="Date of Birth">
+            <input
+              type="date"
+              required
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
+            />
+            <p className="mt-1 text-[11px] text-text-dim">
+              You must be at least 13 years old to join.
+            </p>
           </Field>
 
           <Field label="Account Type">

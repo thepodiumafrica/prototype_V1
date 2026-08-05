@@ -48,7 +48,13 @@ export async function createTestUser(
     email,
     password,
     email_confirm: true,
-    user_metadata: { username, user_type: userType },
+    // date_of_birth is required now: handle_new_user() rejects sign-ups
+    // under 13, and test users have to pass the same gate as anyone else.
+    user_metadata: {
+      username,
+      user_type: userType,
+      date_of_birth: "1990-01-01",
+    },
   });
   if (error || !data.user) {
     throw new Error(`Failed to create ${label} test user: ${error?.message}`);

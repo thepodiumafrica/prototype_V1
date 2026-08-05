@@ -52,7 +52,13 @@ export function CommentComposer({
 
     setPending(false);
     if (insertError) {
-      return setError("Your account type cannot comment.");
+      // 42501 = RLS rejection (the permission matrix says this account
+      // type can't comment). Anything else -- e.g. the rate limit --
+      // gets its own real message instead of this one being wrong.
+      if (insertError.code === "42501") {
+        return setError("Your account type cannot comment.");
+      }
+      return setError(insertError.message);
     }
 
     setText("");
