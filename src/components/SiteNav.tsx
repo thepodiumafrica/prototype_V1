@@ -93,6 +93,12 @@ export async function SiteNav() {
         >
           Forum
         </Link>
+        <Link
+          href="/about"
+          className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"
+        >
+          About
+        </Link>
         {/* Matches navPages(): only moderators ever see this link at all. */}
         {profile?.is_mod && (
           <Link
