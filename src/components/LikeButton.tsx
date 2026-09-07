@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useLocale } from "@/components/LocaleProvider";
 
 // Ported from ThePodium_v5.html's toggleLikeBtn(). The likes table is the
 // source of truth; posts.nlikes is kept in sync by a database trigger (see
@@ -19,6 +20,7 @@ export function LikeButton({
   initialCount: number;
   signedIn: boolean;
 }) {
+  const { t } = useLocale();
   const router = useRouter();
   const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
@@ -61,7 +63,7 @@ export function LikeButton({
       type="button"
       onClick={toggle}
       disabled={pending || !signedIn}
-      title={signedIn ? undefined : "Sign in to like content"}
+      title={signedIn ? undefined : t("signInToLike")}
       className={`rounded-md border px-4 py-1.5 text-sm font-medium ${
         liked
           ? "border-amber bg-amber-faint text-amber"

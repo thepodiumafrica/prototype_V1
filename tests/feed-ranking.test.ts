@@ -30,7 +30,7 @@ describe("feed ranking", () => {
     );
 
     expect(ranked[0].post.id).toBe("a");
-    expect(ranked[0].reason).toBe("Following @someone");
+    expect(ranked[0].reason).toEqual({ key: "feedReasonFollowing", username: "someone" });
   });
 
   it("matching interest tags boost score, one bump per matching tag", () => {
@@ -45,7 +45,7 @@ describe("feed ranking", () => {
     );
 
     expect(ranked.map((r) => r.post.id)).toEqual(["c", "b", "a"]);
-    expect(ranked[0].reason).toBe("In your interests");
+    expect(ranked[0].reason).toEqual({ key: "feedReasonInterests" });
   });
 
   it("being followed always outranks interest matches (150 vs 30-per-tag)", () => {
@@ -80,7 +80,7 @@ describe("feed ranking", () => {
       creatorUsername: "x",
     });
 
-    expect(reasonAbove).toBe("Trending");
+    expect(reasonAbove).toEqual({ key: "feedReasonTrending" });
     expect(reasonAt).toBeNull(); // 300 is not "over" 300
   });
 

@@ -6,6 +6,7 @@ import { PostActions } from "@/components/PostActions";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { ago, readTime } from "@/lib/format";
 import type { UserType } from "@/lib/constants";
+import { translate, type Locale } from "@/lib/i18n/dictionary";
 
 export interface PostCardPost {
   id: string;
@@ -34,11 +35,13 @@ export function PostCard({
   isOwner = false,
   signedIn = false,
   bookmarked = false,
+  locale = "en",
 }: {
   post: PostCardPost;
   isOwner?: boolean;
   signedIn?: boolean;
   bookmarked?: boolean;
+  locale?: Locale;
 }) {
   const isDraft = post.status === "draft";
   const isArc = post.status === "archived";
@@ -64,20 +67,20 @@ export function PostCard({
             <span className="text-[13px] font-semibold text-text">
               @{post.creator}
             </span>
-            <TypeBadge type={post.creator_type} />
-            {post.creator_verified && <VerifiedBadge />}
+            <TypeBadge type={post.creator_type} locale={locale} />
+            {post.creator_verified && <VerifiedBadge locale={locale} />}
           </div>
-          <div className="text-[11px] text-text-dim">{ago(post.created_at)}</div>
+          <div className="text-[11px] text-text-dim">{ago(post.created_at, locale)}</div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <LangBadge lang={post.language} />
-          {isOwner && <StatusBadge status={post.status} />}
+          {isOwner && <StatusBadge status={post.status} locale={locale} />}
         </div>
       </div>
 
       {post.disputed && (
         <div className="mb-2.5 rounded-md border border-warn-border bg-warn-tint px-3 py-2 text-xs text-warn-text">
-          ⚠ Some claims in this post are disputed.
+          {translate(locale, "postDisputedWarning")}
           {post.dispute_note && <em> {post.dispute_note}</em>}
         </div>
       )}
@@ -100,7 +103,7 @@ export function PostCard({
         <div className="ml-auto flex items-center gap-2.5">
           {post.otype === "Article" && post.status === "published" && (
             <span className="text-[11px] text-text-dim">
-              {readTime(post.content)}
+              {readTime(post.content, locale)}
             </span>
           )}
           {post.status === "published" && (

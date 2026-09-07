@@ -7,6 +7,7 @@ import type { PostType } from "@/components/PostFormModal";
 import { fetchPublishedPosts, fetchBookmarkedIds } from "@/lib/post-list";
 import { can } from "@/lib/perms";
 import type { UserType } from "@/lib/constants";
+import { getT } from "@/lib/i18n/locale";
 
 export default async function ForumPage({
   searchParams,
@@ -14,6 +15,7 @@ export default async function ForumPage({
   searchParams: Promise<{ cat?: string }>;
 }) {
   const { cat } = await searchParams;
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const {
@@ -40,29 +42,27 @@ export default async function ForumPage({
   const availableTypes: PostType[] = [
     can(viewerType, "postArticle") ? "Article" : null,
     can(viewerType, "createForum") ? "Forum Post" : null,
-  ].filter((t): t is PostType => t !== null);
+  ].filter((pt): pt is PostType => pt !== null);
 
   return (
     <main className="mx-auto w-full max-w-2xl px-5 py-8">
       {!user && <GuestBanner />}
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-text">Forum</h1>
-          <p className="text-sm text-text-muted">
-            The palaver — open conversation under the community tree
-          </p>
+          <h1 className="font-serif text-2xl font-bold text-text">{t("forumHeading")}</h1>
+          <p className="text-sm text-text-muted">{t("forumSub")}</p>
         </div>
         {can(viewerType, "createForum") && (
           <CreateButton
             availableTypes={availableTypes}
             defaultType="Forum Post"
-            label="+ New Post"
+            labelKey="newPost"
           />
         )}
       </div>
       <CategoryBar basePath="/forum" active={cat ?? "all"} />
       {posts.length === 0 ? (
-        <p className="text-sm text-text-muted">No posts yet.</p>
+        <p className="text-sm text-text-muted">{t("noPostsYet")}</p>
       ) : (
         posts.map((p) => (
           <PostCard
@@ -70,6 +70,7 @@ export default async function ForumPage({
             post={p}
             signedIn={!!user}
             bookmarked={bookmarkedIds.has(p.id)}
+            locale={locale}
           />
         ))
       )}

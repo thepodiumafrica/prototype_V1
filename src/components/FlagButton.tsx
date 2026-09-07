@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Modal } from "@/components/Modal";
 import { FLAG_REASONS } from "@/lib/constants";
+import { useLocale } from "@/components/LocaleProvider";
 
 // Ported from ThePodium_v5.html's openFlagModal()/submitFlag(). Any
 // signed-in user may report content -- PERMS has no gate on this, unlike
@@ -24,6 +25,7 @@ export function FlagButton({
   /** If set, the viewer already reported this -- show status, no button. */
   alreadyFlaggedStatus?: string | null;
 }) {
+  const { t } = useLocale();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function FlagButton({
   }
 
   async function submit() {
-    if (!reason) return setError("Select a reason");
+    if (!reason) return setError(t("selectReason"));
     setPending(true);
     setError(null);
     const supabase = createClient();
@@ -89,45 +91,45 @@ export function FlagButton({
             : "rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-text-muted"
         }
       >
-        ⚑{variant === "ghost" && " Flag"}
+        ⚑{variant === "ghost" && ` ${t("flag")}`}
       </button>
 
       {open && (
         <Modal onClose={close}>
           <h2 className="mb-1.5 font-serif text-lg font-bold text-text">
-            Report Content
+            {t("reportContent")}
           </h2>
           <p className="mb-4 text-sm leading-relaxed text-text-muted">
-            All reports are reviewed by a human moderator within 24 hours.
+            {t("reportDisclaimer")}
           </p>
 
           <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-            Reason
+            {t("reasonLabel")}
           </label>
           <div className="mb-3.5 grid grid-cols-2 gap-2">
             {FLAG_REASONS.map((r) => (
               <button
-                key={r}
+                key={r.value}
                 type="button"
-                onClick={() => setReason(r)}
+                onClick={() => setReason(r.value)}
                 className={`rounded-md border px-2.5 py-2 text-left text-xs font-medium ${
-                  reason === r
+                  reason === r.value
                     ? "border-red bg-red-tint text-red"
                     : "border-border bg-transparent text-text-muted"
                 }`}
               >
-                {r}
+                {t(r.labelKey)}
               </button>
             ))}
           </div>
 
           <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-            Additional notes (optional)
+            {t("additionalNotesLabel")}
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Any context…"
+            placeholder={t("anyContextPlaceholder")}
             className="mb-3 h-[60px] w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
           />
 
@@ -144,14 +146,14 @@ export function FlagButton({
               onClick={submit}
               className="rounded-md border border-red-border bg-red-tint px-4 py-2 text-sm font-semibold text-red disabled:opacity-50"
             >
-              Submit Report
+              {t("submitReport")}
             </button>
             <button
               type="button"
               onClick={close}
               className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text"
             >
-              Cancel
+              {t("cancel")}
             </button>
           </div>
         </Modal>

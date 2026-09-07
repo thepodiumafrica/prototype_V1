@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useLocale } from "@/components/LocaleProvider";
 
 // Ported from ThePodium_v5.html's submitComment() / submitReply(). Both
 // insert a Comment row; the only difference is what parent_id points at
@@ -19,6 +20,7 @@ export function CommentComposer({
   replyingTo?: string;
   onDone?: () => void;
 }) {
+  const { t } = useLocale();
   const router = useRouter();
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
@@ -26,7 +28,7 @@ export function CommentComposer({
 
   async function submit() {
     const trimmed = text.trim();
-    if (!trimmed) return setError("Write something first");
+    if (!trimmed) return setError(t("writeSomethingFirst"));
 
     setPending(true);
     setError(null);
@@ -36,7 +38,7 @@ export function CommentComposer({
     } = await supabase.auth.getUser();
     if (!user) {
       setPending(false);
-      return setError("Sign in required");
+      return setError(t("signInRequired"));
     }
 
     const { error: insertError } = await supabase.from("posts").insert({
@@ -56,7 +58,7 @@ export function CommentComposer({
       // type can't comment). Anything else -- e.g. the rate limit --
       // gets its own real message instead of this one being wrong.
       if (insertError.code === "42501") {
-        return setError("Your account type cannot comment.");
+        return setError(t("cannotComment"));
       }
       return setError(insertError.message);
     }
@@ -73,7 +75,9 @@ export function CommentComposer({
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={isReply ? `Reply to @${replyingTo}…` : "Write a comment…"}
+        placeholder={
+          isReply ? t("replyToUser", { username: replyingTo ?? "" }) : t("writeComment")
+        }
         className={`mb-2 w-full rounded-md border border-border bg-surface px-3 py-2 text-text ${
           isReply ? "h-14 text-[13px]" : "h-20 text-sm"
         }`}
@@ -85,7 +89,7 @@ export function CommentComposer({
         disabled={pending}
         className="rounded-md bg-amber px-3 py-1.5 text-xs font-semibold text-on-primary disabled:opacity-50"
       >
-        {isReply ? "Reply" : "Post Comment"}
+        {isReply ? t("reply") : t("comment")}
       </button>
     </div>
   );

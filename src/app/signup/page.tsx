@@ -6,8 +6,17 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { validatePassword, validateUsername, validateAge } from "@/lib/validate-password";
 import { USER_TYPES, type UserType } from "@/lib/constants";
+import { useLocale } from "@/components/LocaleProvider";
+import type { DictKey } from "@/lib/i18n/dictionary";
+
+const USER_TYPE_KEY: Record<UserType, DictKey> = {
+  reader: "userTypeReader",
+  blogger: "userTypeBlogger",
+  news_agency: "userTypeNewsAgency",
+};
 
 export default function SignUpPage() {
+  const { t } = useLocale();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -23,13 +32,13 @@ export default function SignUpPage() {
     setError(null);
 
     const usernameError = validateUsername(username);
-    if (usernameError) return setError(usernameError);
+    if (usernameError) return setError(t(usernameError));
 
     const passwordError = validatePassword(password);
-    if (passwordError) return setError(passwordError);
+    if (passwordError) return setError(t(passwordError));
 
     const ageError = validateAge(dateOfBirth);
-    if (ageError) return setError(ageError);
+    if (ageError) return setError(t(ageError));
 
     setPending(true);
     const supabase = createClient();
@@ -42,7 +51,7 @@ export default function SignUpPage() {
 
     if (existing) {
       setPending(false);
-      return setError("Username already taken");
+      return setError(t("usernameTaken"));
     }
 
     const { data, error: signUpError } = await supabase.auth.signUp({
@@ -65,11 +74,7 @@ export default function SignUpPage() {
       // so this fallback only matters if that's somehow bypassed.
       const msg = signUpError.message?.trim();
       const isOpaque = !msg || msg === "{}";
-      return setError(
-        isOpaque
-          ? "We couldn't create your account. Please double-check your details and try again."
-          : msg,
-      );
+      return setError(isOpaque ? t("signupGenericError") : msg);
     }
 
     if (data.session) {
@@ -80,14 +85,16 @@ export default function SignUpPage() {
   }
 
   if (checkEmail) {
+    const [before, after] = t("checkEmailSignupBody").split("{email}");
     return (
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
         <h1 className="font-serif text-2xl font-semibold text-text">
-          Check your email
+          {t("checkEmailHeading")}
         </h1>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-text-muted">
-          We sent a confirmation link to <strong>{email}</strong>. Click it to
-          finish creating your account.
+          {before}
+          <strong>{email}</strong>
+          {after}
         </p>
       </main>
     );
@@ -101,15 +108,15 @@ export default function SignUpPage() {
             href="/login"
             className="flex-1 rounded-md px-3 py-2 text-center text-sm font-semibold text-text-muted"
           >
-            Sign In
+            {t("signin")}
           </Link>
           <span className="flex-1 rounded-md bg-bg px-3 py-2 text-center text-sm font-semibold text-text">
-            Create Account
+            {t("createAccount")}
           </span>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Field label="Email">
+          <Field label={t("emailLabel")}>
             <input
               type="email"
               required
@@ -119,26 +126,26 @@ export default function SignUpPage() {
             />
           </Field>
 
-          <Field label="Username">
+          <Field label={t("usernameLabel")}>
             <input
-              placeholder="your_username"
+              placeholder={t("usernamePlaceholder")}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
             />
           </Field>
 
-          <Field label="Password">
+          <Field label={t("passwordLabel")}>
             <input
               type="password"
-              placeholder="Min 10 chars · 1 uppercase · 1 symbol"
+              placeholder={t("passwordHint")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
             />
           </Field>
 
-          <Field label="Date of Birth">
+          <Field label={t("dateOfBirthLabel")}>
             <input
               type="date"
               required
@@ -147,19 +154,19 @@ export default function SignUpPage() {
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
             />
             <p className="mt-1 text-[11px] text-text-dim">
-              You must be at least 13 years old to join.
+              {t("ageGateHint")}
             </p>
           </Field>
 
-          <Field label="Account Type">
+          <Field label={t("accountTypeLabel")}>
             <select
               value={userType}
               onChange={(e) => setUserType(e.target.value as UserType)}
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
             >
-              {USER_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
+              {USER_TYPES.map((ut) => (
+                <option key={ut} value={ut}>
+                  {t(USER_TYPE_KEY[ut])}
                 </option>
               ))}
             </select>
@@ -176,7 +183,7 @@ export default function SignUpPage() {
             disabled={pending}
             className="w-full rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-50"
           >
-            {pending ? "Creating account…" : "Create Account"}
+            {pending ? t("creatingAccount") : t("createAccount")}
           </button>
         </form>
       </div>

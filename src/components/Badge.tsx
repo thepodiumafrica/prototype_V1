@@ -1,11 +1,18 @@
 import type { UserType } from "@/lib/constants";
-import { TYPE_LABEL, TRUST_LABELS, LANGS } from "@/lib/constants";
+import { LANGS } from "@/lib/constants";
+import { translate, type DictKey, type Locale } from "@/lib/i18n/dictionary";
 
 const base =
   "inline-flex items-center rounded-[3px] border px-1.5 py-0.5 text-[10px] font-bold";
 
+const TYPE_LABEL_KEY: Record<UserType, DictKey> = {
+  news_agency: "typeNewsAgency",
+  reader: "typeReader",
+  blogger: "typeBlogger",
+};
+
 // Ported from ThePodium_v5.html's typeBadge().
-export function TypeBadge({ type }: { type: UserType }) {
+export function TypeBadge({ type, locale = "en" }: { type: UserType; locale?: Locale }) {
   const cls =
     type === "news_agency"
       ? "text-blue bg-blue-tint border-blue-border"
@@ -14,31 +21,40 @@ export function TypeBadge({ type }: { type: UserType }) {
         : "text-amber-dim bg-accent-tint border-accent-border";
   return (
     <span className={`${base} ${cls} uppercase tracking-wide`}>
-      {TYPE_LABEL[type]}
+      {translate(locale, TYPE_LABEL_KEY[type])}
     </span>
   );
 }
 
 // Ported from ThePodium_v5.html's badge-verified.
-export function VerifiedBadge() {
+export function VerifiedBadge({ locale = "en" }: { locale?: Locale }) {
   return (
     <span className={`${base} text-amber bg-amber-faint border-accent-border`}>
-      ✓ VERIFIED
+      ✓ {translate(locale, "verified")}
     </span>
   );
 }
 
 // Ported from ThePodium_v5.html's badge-founding.
-export function FoundingBadge() {
+export function FoundingBadge({ locale = "en" }: { locale?: Locale }) {
   return (
     <span className={`${base} text-terra bg-terra-tint border-terra-border`}>
-      ⭐ Founding
+      ⭐ {translate(locale, "founding")}
     </span>
   );
 }
 
+const TRUST_LABEL_KEY: DictKey[] = [
+  "trustNew", // index 0 is never used (levels run 1-5) but keeps indices aligned
+  "trustNew",
+  "trustRising",
+  "trustEstablished",
+  "trustTrusted",
+  "trustFeatured",
+];
+
 // Ported from ThePodium_v5.html's trustBadge()/trust-N classes.
-export function TrustBadge({ level }: { level: number }) {
+export function TrustBadge({ level, locale = "en" }: { level: number; locale?: Locale }) {
   const cls =
     level >= 5
       ? "text-terra bg-terra-tint border-terra-border"
@@ -51,7 +67,10 @@ export function TrustBadge({ level }: { level: number }) {
             : "text-gray-text bg-gray-tint border-gray-border";
   return (
     <span className={`${base} ${cls}`}>
-      Lvl {level} · {TRUST_LABELS[level]}
+      {translate(locale, "trustLevelLabel", {
+        n: level,
+        label: translate(locale, TRUST_LABEL_KEY[level] ?? "trustNew"),
+      })}
     </span>
   );
 }
@@ -61,22 +80,24 @@ export function LocationBadge({
   africanIdentity,
   countryOrigin,
   countryResidence,
+  locale = "en",
 }: {
   africanIdentity: string | null;
   countryOrigin: string | null;
   countryResidence: string | null;
+  locale?: Locale;
 }) {
   if (africanIdentity === "diaspora") {
     return (
       <span className={`${base} text-blue bg-blue-tint border-blue-border`}>
-        DIASPORA · {countryResidence ?? ""}
+        {translate(locale, "diasporaLabel")} · {countryResidence ?? ""}
       </span>
     );
   }
   if (africanIdentity === "continent") {
     return (
       <span className={`${base} text-green bg-green-tint border-green-border`}>
-        🌍 {countryOrigin ?? "Africa"}
+        🌍 {countryOrigin ?? translate(locale, "africaFallback")}
       </span>
     );
   }
@@ -95,13 +116,23 @@ export function LangBadge({ lang }: { lang: string | null }) {
   );
 }
 
+const STATUS_KEY: Record<string, DictKey> = {
+  published: "statusPublished",
+  archived: "statusArchived",
+  draft: "statusDraft",
+};
+
 // Ported from ThePodium_v5.html's badge-draft/badge-published/badge-archived.
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, locale = "en" }: { status: string; locale?: Locale }) {
   const cls =
     status === "published"
       ? "text-green bg-green-tint border-green-border"
       : status === "archived"
         ? "text-text-dim bg-elevated border-border"
         : "text-amber-dim bg-amber-faint border-accent-border";
-  return <span className={`${base} ${cls}`}>{status.toUpperCase()}</span>;
+  return (
+    <span className={`${base} ${cls}`}>
+      {translate(locale, STATUS_KEY[status] ?? "statusDraft")}
+    </span>
+  );
 }

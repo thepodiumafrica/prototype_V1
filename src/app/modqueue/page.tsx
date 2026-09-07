@@ -2,9 +2,22 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ModFlagActions } from "@/components/ModFlagActions";
 import { ago } from "@/lib/format";
+import { getT } from "@/lib/i18n/locale";
+import { FLAG_REASONS } from "@/lib/constants";
+import type { DictKey } from "@/lib/i18n/dictionary";
 
 const TABS = ["pending", "resolved", "transparency"] as const;
 type Tab = (typeof TABS)[number];
+
+const FLAG_REASON_LABEL: Record<string, DictKey> = Object.fromEntries(
+  FLAG_REASONS.map((r) => [r.value, r.labelKey]),
+);
+
+const OTYPE_KEY: Record<string, DictKey> = {
+  Article: "postTypeArticle",
+  "Forum Post": "postTypeForumPost",
+  Comment: "postTypeComment",
+};
 
 type FlagRow = {
   id: string;
@@ -36,6 +49,7 @@ export default async function ModQueuePage({
 }) {
   const { tab: tabParam } = await searchParams;
   const tab: Tab = TABS.includes(tabParam as Tab) ? (tabParam as Tab) : "pending";
+  const { t, locale } = await getT();
 
   const supabase = await createClient();
   const {
@@ -55,7 +69,7 @@ export default async function ModQueuePage({
   if (!isMod) {
     return (
       <main className="mx-auto w-full max-w-2xl px-5 py-16">
-        <p className="text-text-muted">Access restricted.</p>
+        <p className="text-text-muted">{t("accessRestricted")}</p>
       </main>
     );
   }
@@ -86,14 +100,24 @@ export default async function ModQueuePage({
     return root.otype === "Article" ? `/article/${root.id}` : `/thread/${root.id}`;
   }
 
+  function reasonLabel(reason: string) {
+    const key = FLAG_REASON_LABEL[reason];
+    return key ? t(key) : reason;
+  }
+
+  function otypeLabel(otype: string) {
+    const key = OTYPE_KEY[otype];
+    return key ? t(key) : otype;
+  }
+
   return (
     <main className="mx-auto w-full max-w-2xl px-5 py-8">
       <div className="mb-5">
         <h1 className="font-serif text-2xl font-bold text-text">
-          Moderation Queue
+          {t("moderationQueueHeading")}
         </h1>
         <p className="text-sm text-text-muted">
-          {pending.length} pending · {resolved.length} resolved
+          {t("pendingResolvedSub", { pending: pending.length, resolved: resolved.length })}
         </p>
       </div>
 
@@ -102,42 +126,42 @@ export default async function ModQueuePage({
           <div className="mb-0.5 text-[22px] font-semibold text-text">
             {flags.length}
           </div>
-          <div className="text-[11px] text-text-dim">Total flags</div>
+          <div className="text-[11px] text-text-dim">{t("totalFlags")}</div>
         </div>
         <div className="rounded-lg border border-border bg-surface p-3 text-center">
           <div className="mb-0.5 text-[22px] font-semibold text-red">
             {confirmedCount}
           </div>
-          <div className="text-[11px] text-text-dim">Removed</div>
+          <div className="text-[11px] text-text-dim">{t("removedStat")}</div>
         </div>
         <div className="rounded-lg border border-border bg-surface p-3 text-center">
           <div className="mb-0.5 text-[22px] font-semibold text-green">
             {dismissedCount}
           </div>
-          <div className="text-[11px] text-text-dim">Dismissed</div>
+          <div className="text-[11px] text-text-dim">{t("dismissedStat")}</div>
         </div>
       </div>
 
       <div className="mb-[18px] rounded-md border border-red-border bg-red-tint px-3.5 py-2.5 text-[13px] leading-relaxed text-red">
-        ⚠ SLA: Hate speech within 6 hours. All other flags within 24 hours.
+        {t("slaWarning")}
       </div>
 
       <div className="mb-4 flex flex-wrap gap-1.5">
-        {TABS.map((t) => (
+        {TABS.map((tb) => (
           <Link
-            key={t}
-            href={`/modqueue${t === "pending" ? "" : `?tab=${t}`}`}
+            key={tb}
+            href={`/modqueue${tb === "pending" ? "" : `?tab=${tb}`}`}
             className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
-              tab === t
+              tab === tb
                 ? "border-amber bg-amber-faint text-amber"
                 : "border-border text-text-muted"
             }`}
           >
-            {t === "pending"
-              ? `Pending${pending.length > 0 ? ` (${pending.length})` : ""}`
-              : t === "resolved"
-                ? "Resolved"
-                : "Public Log"}
+            {tb === "pending"
+              ? `${t("tabPending")}${pending.length > 0 ? ` (${pending.length})` : ""}`
+              : tb === "resolved"
+                ? t("tabResolved")
+                : t("tabPublicLog")}
           </Link>
         ))}
       </div>
@@ -145,7 +169,7 @@ export default async function ModQueuePage({
       {tab === "pending" && (
         <>
           {pending.length === 0 && (
-            <p className="text-green">✓ No pending flags.</p>
+            <p className="text-green">{t("noPendingFlags")}</p>
           )}
           {pending.map((f) => {
             const post = f.posts;
@@ -159,13 +183,13 @@ export default async function ModQueuePage({
               >
                 <div className="mb-2.5 flex items-center justify-between">
                   <span className="inline-flex items-center rounded-[3px] border border-red-border bg-red-tint px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red">
-                    {f.reason}
+                    {reasonLabel(f.reason)}
                   </span>
                   <div className="text-[11px] text-text-dim">
-                    {ago(f.created_at)}
+                    {ago(f.created_at, locale)}
                     {isHateSpeech && (
                       <span className="ml-1 font-semibold text-red">
-                        ⚠ URGENT
+                        {t("urgentTag")}
                       </span>
                     )}
                   </div>
@@ -174,7 +198,7 @@ export default async function ModQueuePage({
                 {post && (
                   <div className="mb-2.5 rounded-md bg-elevated px-3.5 py-2.5">
                     <div className="mb-1 text-xs text-text-dim">
-                      @{post.profiles?.username ?? "unknown"} · {post.otype}
+                      @{post.profiles?.username ?? "unknown"} · {otypeLabel(post.otype)}
                     </div>
                     <p className="text-[13px] leading-relaxed text-text-muted">
                       {post.content.replace(/[#>*]/g, "").slice(0, 200)}…
@@ -183,7 +207,7 @@ export default async function ModQueuePage({
                 )}
 
                 <div className="mb-3 text-xs text-text-dim">
-                  Reported by @{f.reporter_profile?.username ?? "unknown"}
+                  {t("reportedBy", { username: f.reporter_profile?.username ?? "unknown" })}
                   {f.notes && ` · "${f.notes}"`}
                 </div>
 
@@ -202,7 +226,7 @@ export default async function ModQueuePage({
                       href={targetHref(post)}
                       className="rounded-md border border-transparent px-3 py-1.5 text-xs font-semibold text-text-muted"
                     >
-                      View
+                      {t("viewLink")}
                     </Link>
                   )}
                 </div>
@@ -219,9 +243,9 @@ export default async function ModQueuePage({
             className="mb-2 flex items-center justify-between rounded-[10px] border border-border p-5"
           >
             <div>
-              <span className="mr-2 text-xs text-text-muted">{f.reason}</span>
+              <span className="mr-2 text-xs text-text-muted">{reasonLabel(f.reason)}</span>
               <span className="text-[11px] text-text-dim">
-                @{f.reporter_profile?.username ?? "unknown"} · {ago(f.created_at)}
+                @{f.reporter_profile?.username ?? "unknown"} · {ago(f.created_at, locale)}
               </span>
             </div>
             <span
@@ -229,7 +253,7 @@ export default async function ModQueuePage({
                 f.status === "confirmed" ? "text-red" : "text-green"
               }`}
             >
-              {f.status === "confirmed" ? "Removed" : "Dismissed"}
+              {f.status === "confirmed" ? t("removedLabel") : t("dismissedLabel")}
             </span>
           </div>
         ))}
@@ -237,21 +261,20 @@ export default async function ModQueuePage({
       {tab === "transparency" && (
         <div className="rounded-[10px] border border-border p-5">
           <div className="mb-1 text-sm font-semibold text-text">
-            Public Moderation Log
+            {t("publicModLogHeading")}
           </div>
           <p className="mb-[18px] text-[13px] leading-relaxed text-text-muted">
-            The Podium publishes moderation statistics to maintain community
-            trust.
+            {t("publicModLogBody")}
           </p>
           <div className="grid grid-cols-2 gap-2.5">
             {(
               [
-                ["Total flags received", flags.length],
-                ["Reviewed", resolved.length],
-                ["Content removed", confirmedCount],
-                ["Flags dismissed", dismissedCount],
-                ["Avg review time", "< 12 hours"],
-                ["Pending", pending.length],
+                [t("statTotalFlagsReceived"), flags.length],
+                [t("statReviewed"), resolved.length],
+                [t("statContentRemoved"), confirmedCount],
+                [t("statFlagsDismissed"), dismissedCount],
+                [t("statAvgReviewTime"), t("statAvgReviewTimeValue")],
+                [t("statPending"), pending.length],
               ] as const
             ).map(([label, value]) => (
               <div key={label} className="rounded-md bg-elevated px-3.5 py-2.5">

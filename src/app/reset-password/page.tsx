@@ -5,8 +5,10 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { validatePassword } from "@/lib/validate-password";
+import { useLocale } from "@/components/LocaleProvider";
 
 function ResetPasswordForm() {
+  const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [ready, setReady] = useState(false);
@@ -46,8 +48,8 @@ function ResetPasswordForm() {
     setError(null);
 
     const passwordError = validatePassword(password);
-    if (passwordError) return setError(passwordError);
-    if (password !== confirmPassword) return setError("Passwords don't match");
+    if (passwordError) return setError(t(passwordError));
+    if (password !== confirmPassword) return setError(t("passwordsDontMatch"));
 
     setPending(true);
     const supabase = createClient();
@@ -59,16 +61,19 @@ function ResetPasswordForm() {
   }
 
   if (linkError) {
+    const [before, after] = t("linkExpiredBody").split("{error}");
     return (
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
         <h1 className="font-serif text-2xl font-semibold text-text">
-          Link expired
+          {t("linkExpiredHeading")}
         </h1>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-text-muted">
-          {linkError} Request a new reset link and try again.
+          {before}
+          {linkError}
+          {after}
         </p>
         <Link href="/forgot-password" className="mt-6 text-sm font-semibold text-amber">
-          Request a new link
+          {t("requestNewLink")}
         </Link>
       </main>
     );
@@ -78,10 +83,10 @@ function ResetPasswordForm() {
     return (
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
         <h1 className="font-serif text-2xl font-semibold text-text">
-          Password updated
+          {t("passwordUpdatedHeading")}
         </h1>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-text-muted">
-          Your password has been changed.
+          {t("passwordUpdatedBody")}
         </p>
         <button
           onClick={() => {
@@ -90,7 +95,7 @@ function ResetPasswordForm() {
           }}
           className="mt-6 rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary"
         >
-          Continue to The Podium
+          {t("continueToPodium")}
         </button>
       </main>
     );
@@ -99,7 +104,7 @@ function ResetPasswordForm() {
   if (!ready) {
     return (
       <main className="flex flex-1 items-center justify-center px-6 py-24 text-center text-sm text-text-muted">
-        Verifying your reset link…
+        {t("verifyingLink")}
       </main>
     );
   }
@@ -108,16 +113,16 @@ function ResetPasswordForm() {
     <main className="flex flex-1 items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm">
         <h1 className="mb-1 font-serif text-xl font-semibold text-text">
-          Choose a new password
+          {t("chooseNewPasswordHeading")}
         </h1>
         <p className="mb-5 text-sm text-text-muted">
-          Min 10 chars, 1 uppercase, 1 number or symbol.
+          {t("newPasswordHint")}
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-              New Password
+              {t("newPasswordLabel")}
             </label>
             <input
               type="password"
@@ -130,7 +135,7 @@ function ResetPasswordForm() {
 
           <div>
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-              Confirm Password
+              {t("confirmPasswordLabel")}
             </label>
             <input
               type="password"
@@ -152,7 +157,7 @@ function ResetPasswordForm() {
             disabled={pending}
             className="w-full rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-50"
           >
-            {pending ? "Updating…" : "Update Password"}
+            {pending ? t("updatingPassword") : t("updatePassword")}
           </button>
         </form>
       </div>

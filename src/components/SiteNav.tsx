@@ -2,14 +2,17 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { Avatar } from "@/components/Avatar";
 import { CreateButton } from "@/components/CreateButton";
 import { NotificationBell, type NotificationRow } from "@/components/NotificationBell";
 import type { PostType } from "@/components/PostFormModal";
 import { can } from "@/lib/perms";
 import type { UserType } from "@/lib/constants";
+import { getT } from "@/lib/i18n/locale";
 
 export async function SiteNav() {
+  const { t } = await getT();
   const supabase = await createClient();
   const {
     data: { user },
@@ -40,7 +43,9 @@ export async function SiteNav() {
     const [{ data: notifRows }, { count }] = await Promise.all([
       supabase
         .from("notifications")
-        .select("id, type, text, entity_id, read, created_at, posts:entity_id(otype)")
+        .select(
+          "id, type, entity_id, read, created_at, posts:entity_id(otype), from_user_profile:profiles!notifications_from_user_fkey(username)",
+        )
         .eq("for_user", user.id)
         .order("created_at", { ascending: false })
         .limit(12),
@@ -78,26 +83,26 @@ export async function SiteNav() {
             href="/feed"
             className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"
           >
-            Feed
+            {t("feed")}
           </Link>
         )}
         <Link
           href="/articles"
           className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"
         >
-          Articles
+          {t("articles")}
         </Link>
         <Link
           href="/forum"
           className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"
         >
-          Forum
+          {t("forum")}
         </Link>
         <Link
           href="/about"
           className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"
         >
-          About
+          {t("about")}
         </Link>
         {/* Matches navPages(): only moderators ever see this link at all. */}
         {profile?.is_mod && (
@@ -105,13 +110,14 @@ export async function SiteNav() {
             href="/modqueue"
             className="rounded-md px-2.5 py-1.5 text-xs font-medium text-text-muted"
           >
-            Mod
+            {t("mod")}
           </Link>
         )}
       </div>
 
       <div className="flex items-center gap-2">
         <ThemeToggle />
+        <LanguageToggle />
         {profile && availableTypes.length > 0 && (
           <CreateButton availableTypes={availableTypes} />
         )}
@@ -138,7 +144,7 @@ export async function SiteNav() {
                 type="submit"
                 className="rounded-md px-2.5 py-1.5 text-sm font-medium text-text-muted"
               >
-                Out
+                {t("out")}
               </button>
             </form>
           </>
@@ -148,13 +154,13 @@ export async function SiteNav() {
               href="/login"
               className="rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-text"
             >
-              Sign In
+              {t("signin")}
             </Link>
             <Link
               href="/signup"
               className="rounded-md bg-amber px-3 py-1.5 text-sm font-semibold text-on-primary"
             >
-              Join
+              {t("join")}
             </Link>
           </>
         )}

@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getT } from "@/lib/i18n/locale";
 
 export default async function Home() {
+  const { t } = await getT();
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,24 +33,23 @@ export default async function Home() {
       </div>
 
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-text sm:text-4xl">
-        Coming soon
+        {t("homeComingSoon")}
       </h1>
       <p className="mt-4 max-w-md text-base leading-relaxed text-text-muted">
-        Voices of the continent and the diaspora — a place to inform,
-        share, and take control of the African narrative.
+        {t("homeTagline")}
       </p>
       <div className="mt-6 flex gap-3">
         <Link
           href="/login"
           className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text"
         >
-          Sign In
+          {t("signin")}
         </Link>
         <Link
           href="/signup"
           className="rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary"
         >
-          Create Account
+          {t("createAccount")}
         </Link>
       </div>
     </main>

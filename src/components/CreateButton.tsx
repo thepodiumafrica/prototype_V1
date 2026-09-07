@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { PostFormModal, type PostType } from "@/components/PostFormModal";
+import { useLocale } from "@/components/LocaleProvider";
+import type { DictKey } from "@/lib/i18n/dictionary";
 
 // Ported from ThePodium_v5.html's nav "+ Create" button / openCreateModal().
 // availableTypes comes from the PERMS matrix (postArticle / createForum),
@@ -9,12 +11,13 @@ import { PostFormModal, type PostType } from "@/components/PostFormModal";
 export function CreateButton({
   availableTypes = ["Article", "Forum Post"],
   defaultType,
-  label = "+ Create",
+  labelKey = "create",
 }: {
   availableTypes?: PostType[];
   defaultType?: PostType;
-  label?: string;
+  labelKey?: DictKey;
 }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
 
   return (
@@ -24,7 +27,7 @@ export function CreateButton({
         onClick={() => setOpen(true)}
         className="flex-shrink-0 rounded-md bg-amber px-3 py-1.5 text-sm font-semibold text-on-primary"
       >
-        {label}
+        {t(labelKey)}
       </button>
       {open && (
         <PostFormModal

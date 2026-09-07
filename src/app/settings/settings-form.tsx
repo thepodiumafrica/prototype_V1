@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { AFRICAN_COUNTRIES, EXPERTISE, INTERESTS } from "@/lib/constants";
+import { AFRICAN_COUNTRIES, EXPERTISE, INTERESTS, INTEREST_KEY } from "@/lib/constants";
+import { useLocale } from "@/components/LocaleProvider";
+import { countryLabel, expertiseLabel } from "@/lib/i18n/data-labels";
+import type { DictKey } from "@/lib/i18n/dictionary";
 
 type Identity = "continent" | "diaspora" | "ally";
 
@@ -19,13 +22,14 @@ type Profile = {
   interests: string[] | null;
 };
 
-const IDENTITIES: Array<{ value: Identity; label: string }> = [
-  { value: "continent", label: "🌍 Continent" },
-  { value: "diaspora", label: "✈️ Diaspora" },
-  { value: "ally", label: "🤝 Ally" },
+const IDENTITIES: Array<{ value: Identity; labelKey: DictKey }> = [
+  { value: "continent", labelKey: "continent" },
+  { value: "diaspora", labelKey: "diaspora" },
+  { value: "ally", labelKey: "identityAlly" },
 ];
 
 export function SettingsForm({ profile }: { profile: Profile }) {
+  const { t, locale } = useLocale();
   const router = useRouter();
   const [bio, setBio] = useState(profile.bio ?? "");
   const [profession, setProfession] = useState(profile.profession ?? "");
@@ -96,18 +100,18 @@ export function SettingsForm({ profile }: { profile: Profile }) {
           onClick={() => router.push(`/profile/${profile.username}`)}
           className="text-sm text-text-muted"
         >
-          ← Back
+          {t("back")}
         </button>
       </div>
       <h1 className="mb-5 font-serif text-2xl font-semibold text-text">
-        Edit Profile
+        {t("editProfileHeading")}
       </h1>
 
       <form
         onSubmit={handleSubmit}
         className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6"
       >
-        <Field label="Bio">
+        <Field label={t("bioLabel")}>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
@@ -116,25 +120,25 @@ export function SettingsForm({ profile }: { profile: Profile }) {
           />
         </Field>
 
-        <Field label="Profession / Role">
+        <Field label={t("professionLabel")}>
           <input
             value={profession}
             onChange={(e) => setProfession(e.target.value)}
-            placeholder="e.g. Software Engineer"
+            placeholder={t("professionPlaceholder")}
             className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
           />
         </Field>
 
-        <Field label="Industry">
+        <Field label={t("industryLabel")}>
           <input
             value={industry}
             onChange={(e) => setIndustry(e.target.value)}
-            placeholder="e.g. Technology, Finance"
+            placeholder={t("industryPlaceholder")}
             className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
           />
         </Field>
 
-        <Field label="LinkedIn URL">
+        <Field label={t("linkedinLabel")}>
           <input
             value={linkedinUrl}
             onChange={(e) => setLinkedinUrl(e.target.value)}
@@ -143,7 +147,7 @@ export function SettingsForm({ profile }: { profile: Profile }) {
           />
         </Field>
 
-        <Field label="Identity">
+        <Field label={t("identityLabel")}>
           <div className="flex gap-2">
             {IDENTITIES.map((id) => (
               <button
@@ -156,28 +160,28 @@ export function SettingsForm({ profile }: { profile: Profile }) {
                     : "border-border text-text-muted"
                 }`}
               >
-                {id.label}
+                {t(id.labelKey)}
               </button>
             ))}
           </div>
         </Field>
 
-        <Field label="Country of Origin">
+        <Field label={t("countryOfOriginLabel")}>
           <select
             value={countryOrigin}
             onChange={(e) => setCountryOrigin(e.target.value)}
             className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
           >
-            <option value="">Select…</option>
+            <option value="">{t("selectEllipsis")}</option>
             {AFRICAN_COUNTRIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {countryLabel(c, locale)}
               </option>
             ))}
           </select>
         </Field>
 
-        <Field label="Areas of Expertise (up to 5)">
+        <Field label={t("expertiseLabel")}>
           <div className="flex flex-wrap gap-1.5">
             {EXPERTISE.map((ex) => {
               const selected = expertise.includes(ex);
@@ -192,14 +196,14 @@ export function SettingsForm({ profile }: { profile: Profile }) {
                       : "border-border text-text-muted"
                   }`}
                 >
-                  {ex}
+                  {expertiseLabel(ex, locale)}
                 </button>
               );
             })}
           </div>
         </Field>
 
-        <Field label="Interests">
+        <Field label={t("interestsLabel")}>
           <div className="flex flex-wrap gap-1.5">
             {INTERESTS.map((i) => {
               const selected = interests.includes(i);
@@ -214,7 +218,7 @@ export function SettingsForm({ profile }: { profile: Profile }) {
                       : "border-border text-text-muted"
                   }`}
                 >
-                  {i}
+                  {t(INTEREST_KEY[i])}
                 </button>
               );
             })}
@@ -233,14 +237,14 @@ export function SettingsForm({ profile }: { profile: Profile }) {
             disabled={pending}
             className="rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-50"
           >
-            {pending ? "Saving…" : "Save Changes"}
+            {pending ? t("savingEllipsis") : t("save")}
           </button>
           <button
             type="button"
             onClick={() => router.push(`/profile/${profile.username}`)}
             className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text"
           >
-            Cancel
+            {t("cancel")}
           </button>
         </div>
       </form>

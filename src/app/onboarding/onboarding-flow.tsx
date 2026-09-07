@@ -7,37 +7,42 @@ import {
   AFRICAN_COUNTRIES,
   DIASPORA_COUNTRIES,
   INTERESTS,
+  INTEREST_KEY,
 } from "@/lib/constants";
+import { useLocale } from "@/components/LocaleProvider";
+import { countryLabel } from "@/lib/i18n/data-labels";
+import type { DictKey } from "@/lib/i18n/dictionary";
 
 type Identity = "continent" | "diaspora" | "ally";
 
 const IDENTITY_OPTIONS: {
   id: Identity;
   icon: string;
-  label: string;
-  sub: string;
+  labelKey: DictKey;
+  subKey: DictKey;
 }[] = [
   {
     id: "continent",
     icon: "🌍",
-    label: "I'm on the African continent",
-    sub: "Living and working in Africa",
+    labelKey: "identityContinentLabel",
+    subKey: "identityContinentSub",
   },
   {
     id: "diaspora",
     icon: "✈️",
-    label: "I'm part of the African diaspora",
-    sub: "African living or working abroad",
+    labelKey: "identityDiasporaLabel",
+    subKey: "identityDiasporaSub",
   },
   {
     id: "ally",
     icon: "🤝",
-    label: "I'm an ally and supporter",
-    sub: "Non-African interested in Africa",
+    labelKey: "identityAllyLabel",
+    subKey: "identityAllySub",
   },
 ];
 
 export function OnboardingFlow({ userId }: { userId: string }) {
+  const { t, locale } = useLocale();
   const router = useRouter();
   const supabase = createClient();
 
@@ -93,11 +98,10 @@ export function OnboardingFlow({ userId }: { userId: string }) {
           <>
             <div className="mb-4 text-4xl">🌍</div>
             <h1 className="font-serif text-xl font-bold text-text">
-              Welcome to The Podium
+              {t("onboardingWelcome")}
             </h1>
             <p className="mt-2 mb-6 text-sm leading-relaxed text-text-muted">
-              Help us understand where you&apos;re coming from so we can
-              connect you with what matters most.
+              {t("onboardingIntro")}
             </p>
             <div className="flex flex-col gap-2.5">
               {IDENTITY_OPTIONS.map((opt) => (
@@ -109,10 +113,10 @@ export function OnboardingFlow({ userId }: { userId: string }) {
                   <span className="text-2xl">{opt.icon}</span>
                   <span>
                     <span className="block text-sm font-semibold text-text">
-                      {opt.label}
+                      {t(opt.labelKey)}
                     </span>
                     <span className="block text-xs text-text-muted">
-                      {opt.sub}
+                      {t(opt.subKey)}
                     </span>
                   </span>
                 </button>
@@ -122,7 +126,7 @@ export function OnboardingFlow({ userId }: { userId: string }) {
               onClick={() => setStep(2)}
               className="mt-5 text-xs text-text-muted underline"
             >
-              Skip for now
+              {t("skipForNow")}
             </button>
           </>
         )}
@@ -130,28 +134,27 @@ export function OnboardingFlow({ userId }: { userId: string }) {
         {step === 2 && (
           <div className="text-left">
             <div className="mb-5 text-[11px] font-semibold tracking-wide text-text-muted">
-              STEP 2 OF 3 — YOUR ROOTS
+              {t("step2of3")}
             </div>
             <h1 className="font-serif text-lg font-bold text-text">
-              Where are you from?
+              {t("whereAreYouFrom")}
             </h1>
             <p className="mt-2 mb-5 text-sm leading-relaxed text-text-muted">
-              This helps us connect you with content and people from your
-              region.
+              {t("rootsIntro")}
             </p>
 
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-              Country of Origin
+              {t("countryOfOriginLabel")}
             </label>
             <select
               value={countryOrigin}
               onChange={(e) => setCountryOrigin(e.target.value)}
               className="mb-4 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-text"
             >
-              <option value="">Select country…</option>
+              <option value="">{t("selectCountryEllipsis")}</option>
               {AFRICAN_COUNTRIES.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {countryLabel(c, locale)}
                 </option>
               ))}
             </select>
@@ -159,17 +162,17 @@ export function OnboardingFlow({ userId }: { userId: string }) {
             {identity === "diaspora" && (
               <>
                 <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-                  Country of Residence
+                  {t("countryOfResidenceLabel")}
                 </label>
                 <select
                   value={countryResidence}
                   onChange={(e) => setCountryResidence(e.target.value)}
                   className="mb-4 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-text"
                 >
-                  <option value="">Select country…</option>
+                  <option value="">{t("selectCountryEllipsis")}</option>
                   {DIASPORA_COUNTRIES.map((c) => (
                     <option key={c} value={c}>
-                      {c}
+                      {countryLabel(c, locale)}
                     </option>
                   ))}
                 </select>
@@ -181,13 +184,13 @@ export function OnboardingFlow({ userId }: { userId: string }) {
                 onClick={continueRoots}
                 className="rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary"
               >
-                Continue
+                {t("continueAction")}
               </button>
               <button
                 onClick={() => setStep(3)}
                 className="rounded-md px-4 py-2 text-sm font-semibold text-text-muted"
               >
-                Skip
+                {t("skipAction")}
               </button>
             </div>
           </div>
@@ -196,13 +199,13 @@ export function OnboardingFlow({ userId }: { userId: string }) {
         {step === 3 && (
           <div className="text-left">
             <div className="mb-5 text-[11px] font-semibold tracking-wide text-text-muted">
-              STEP 3 OF 3 — YOUR INTERESTS
+              {t("step3of3")}
             </div>
             <h1 className="font-serif text-lg font-bold text-text">
-              What do you want to read?
+              {t("whatDoYouWantToRead")}
             </h1>
             <p className="mt-2 mb-5 text-sm leading-relaxed text-text-muted">
-              Select everything that interests you.
+              {t("selectInterestsIntro")}
             </p>
 
             <div className="mb-6 flex flex-wrap gap-1.5">
@@ -218,7 +221,7 @@ export function OnboardingFlow({ userId }: { userId: string }) {
                         : "border-border text-text-muted"
                     }`}
                   >
-                    {i}
+                    {t(INTEREST_KEY[i])}
                   </button>
                 );
               })}
@@ -228,7 +231,7 @@ export function OnboardingFlow({ userId }: { userId: string }) {
               onClick={finish}
               className="rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary"
             >
-              Finish
+              {t("finish")}
             </button>
           </div>
         )}

@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { CATS, ADINKRA } from "@/lib/constants";
 import { AdinkraIcon } from "@/components/AdinkraIcon";
+import { getT } from "@/lib/i18n/locale";
 
 // Ported from ThePodium_v5.html's catBarHtml(). Plain links (?cat=...) so
 // filtering works without client JS and the category is shareable/bookmarkable.
-export function CategoryBar({
+export async function CategoryBar({
   basePath,
   active,
 }: {
   basePath: string;
   active: string;
 }) {
+  const { t } = await getT();
   return (
     <div className="mb-5 flex gap-1.5 overflow-x-auto pb-1">
       {CATS.map((c) => {
@@ -20,7 +22,7 @@ export function CategoryBar({
           <Link
             key={c.id}
             href={c.id === "all" ? basePath : `${basePath}?cat=${c.id}`}
-            title={a ? `${a.name} — ${a.proverb}` : undefined}
+            title={a ? `${a.name} — ${t(a.proverbKey)}` : undefined}
             className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap ${
               isActive
                 ? "border-amber bg-amber-faint text-amber"
@@ -28,7 +30,7 @@ export function CategoryBar({
             }`}
           >
             {a && <AdinkraIcon category={c.id} size={12} />}
-            {c.l}
+            {t(c.labelKey)}
           </Link>
         );
       })}

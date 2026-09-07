@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { computeTrust } from "@/lib/trust";
 import { can } from "@/lib/perms";
 import type { UserType } from "@/lib/constants";
-import { ADINKRA } from "@/lib/constants";
+import { ADINKRA, CATS } from "@/lib/constants";
 import { Avatar } from "@/components/Avatar";
 import {
   TypeBadge,
@@ -25,6 +25,8 @@ import { ViewTracker } from "@/components/ViewTracker";
 import { CommentThread } from "@/components/CommentThread";
 import { fmtDate, readTime } from "@/lib/format";
 import { renderMd } from "@/lib/markdown";
+import { getT } from "@/lib/i18n/locale";
+import { countryLabel } from "@/lib/i18n/data-labels";
 
 // Ported from ThePodium_v5.html's renderPostDetail(oid, backView), which
 // the prototype shares between the article view and the forum thread view
@@ -38,6 +40,7 @@ export async function PostDetail({
   otype: "Article" | "Forum Post";
   backHref: string;
 }) {
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const {
@@ -58,7 +61,7 @@ export async function PostDetail({
   if (!post || !post.profiles) {
     return (
       <main className="mx-auto w-full max-w-2xl px-5 py-16">
-        <p className="text-text-muted">Content not found.</p>
+        <p className="text-text-muted">{t("contentNotFound")}</p>
       </main>
     );
   }
@@ -130,7 +133,7 @@ export async function PostDetail({
   // title + excerpt + a fixed sign-off, matching the prototype.
   const whatsappText = `${post.title}\n\n${post.content
     .replace(/[#>*`[\]()]/g, "")
-    .slice(0, 120)}…\n\nRead on The Podium`;
+    .slice(0, 120)}…\n\n${t("readOnPodium")}`;
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
 
   const trustLevel = await computeTrust(supabase, creator.id);
@@ -146,7 +149,7 @@ export async function PostDetail({
       <ViewTracker postId={post.id} />
       <div className="mb-4">
         <Link href={backHref} className="text-sm text-text-muted">
-          ← Back
+          {t("back")}
         </Link>
       </div>
 
@@ -161,24 +164,31 @@ export async function PostDetail({
               >
                 @{creator.username}
               </Link>
-              <TypeBadge type={creator.user_type} />
-              {creator.verified && <VerifiedBadge />}
-              <TrustBadge level={trustLevel} />
+              <TypeBadge type={creator.user_type} locale={locale} />
+              {creator.verified && <VerifiedBadge locale={locale} />}
+              <TrustBadge level={trustLevel} locale={locale} />
               <LocationBadge
                 africanIdentity={creator.african_identity}
-                countryOrigin={creator.country_origin}
-                countryResidence={creator.country_residence}
+                countryOrigin={
+                  creator.country_origin ? countryLabel(creator.country_origin, locale) : null
+                }
+                countryResidence={
+                  creator.country_residence
+                    ? countryLabel(creator.country_residence, locale)
+                    : null
+                }
+                locale={locale}
               />
             </div>
             <div className="text-xs text-text-dim">
-              {fmtDate(post.created_at)}
-              {otype === "Article" ? ` · ${readTime(post.content)}` : ""} · 👁{" "}
+              {fmtDate(post.created_at, locale)}
+              {otype === "Article" ? ` · ${readTime(post.content, locale)}` : ""} · 👁{" "}
               {post.views ?? 0}
             </div>
           </div>
           <div className="flex items-center gap-1.5">
             <LangBadge lang={post.language} />
-            {isOwner && <StatusBadge status={post.status} />}
+            {isOwner && <StatusBadge status={post.status} locale={locale} />}
             {authUser && !isOwner && !myFlagStatus && (
               <FlagButton
                 entityId={post.id}
@@ -198,7 +208,7 @@ export async function PostDetail({
 
         {post.disputed && (
           <div className="mb-3.5 rounded-md border border-warn-border bg-warn-tint px-3.5 py-2.5 text-xs text-warn-text">
-            ⚠ Some claims in this post are disputed.
+            {t("postDisputedWarning")}
             {post.dispute_note && <em> {post.dispute_note}</em>}
           </div>
         )}
@@ -207,10 +217,11 @@ export async function PostDetail({
           <div className="mb-2 flex items-center gap-2 text-amber-dim">
             <AdinkraIcon category={post.category} size={16} />
             <span className="text-[11px] font-semibold uppercase tracking-wide">
-              {post.category} · {adinkra.name}
+              {t(CATS.find((c) => c.id === post.category)?.labelKey ?? "catAll")} ·{" "}
+              {adinkra.name}
             </span>
             <span className="text-[11px] italic text-text-dim">
-              &quot;{adinkra.proverb}&quot;
+              &quot;{t(adinkra.proverbKey)}&quot;
             </span>
           </div>
         )}
@@ -219,8 +230,8 @@ export async function PostDetail({
           {post.title}
         </h1>
         <div className="mb-4 flex flex-wrap gap-1.5">
-          {post.tags.map((t: string) => (
-            <Tag key={t} label={t} />
+          {post.tags.map((tag: string) => (
+            <Tag key={tag} label={tag} />
           ))}
         </div>
 
@@ -245,7 +256,7 @@ export async function PostDetail({
             rel="noopener noreferrer"
             className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-text"
           >
-            WhatsApp ↗
+            {t("whatsappShare")}
           </a>
           <CopyLinkButton />
           {authUser && (

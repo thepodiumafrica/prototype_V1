@@ -7,6 +7,7 @@ import { CommentLikeButton } from "@/components/CommentLikeButton";
 import { CommentComposer } from "@/components/CommentComposer";
 import { FlagButton } from "@/components/FlagButton";
 import { ago } from "@/lib/format";
+import { useLocale } from "@/components/LocaleProvider";
 
 export interface ThreadComment {
   id: string;
@@ -34,6 +35,7 @@ export function CommentItem({
   viewerId: string | null;
   canComment: boolean;
 }) {
+  const { t, locale } = useLocale();
   const [showReply, setShowReply] = useState(false);
   const replies = comment.replies;
 
@@ -48,7 +50,7 @@ export function CommentItem({
           @{comment.creator}
         </Link>
         <span className="text-[11px] text-text-dim">
-          · {ago(comment.created_at)}
+          · {ago(comment.created_at, locale)}
         </span>
         {signedIn && viewerId && viewerId !== comment.creatorId && (
           <FlagButton
@@ -76,11 +78,12 @@ export function CommentItem({
             onClick={() => setShowReply((s) => !s)}
             className="bg-transparent text-xs text-text-dim"
           >
-            ↳ Reply{replies.length ? ` (${replies.length})` : ""}
+            ↳ {t("reply")}{replies.length ? ` (${replies.length})` : ""}
           </button>
         ) : replies.length ? (
           <span className="text-xs text-text-dim">
-            ↳ {replies.length} {replies.length === 1 ? "reply" : "replies"}
+            ↳ {replies.length}{" "}
+            {replies.length === 1 ? t("replySingular") : t("replyPlural")}
           </span>
         ) : null}
       </div>
@@ -98,7 +101,7 @@ export function CommentItem({
                   @{r.creator}
                 </Link>
                 <span className="text-[10px] text-text-dim">
-                  · {ago(r.created_at)}
+                  · {ago(r.created_at, locale)}
                 </span>
               </div>
               <p className="text-[13px] leading-relaxed text-text-muted">

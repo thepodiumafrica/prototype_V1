@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PostFormModal } from "@/components/PostFormModal";
+import { useLocale } from "@/components/LocaleProvider";
 
 // Ported from ThePodium_v5.html's owner-only card/detail actions:
 // Edit / Publish / Archive / Restore.
@@ -14,6 +15,7 @@ export function PostActions({
   postId: string;
   status: string;
 }) {
+  const { t } = useLocale();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [pending, setPending] = useState(false);
@@ -38,7 +40,7 @@ export function PostActions({
         onClick={() => setEditing(true)}
         className="rounded-md border border-border bg-elevated px-2.5 py-1 text-xs font-semibold text-text-muted"
       >
-        ✎ Edit
+        {t("editAction")}
       </button>
       {status === "draft" && (
         <button
@@ -47,7 +49,7 @@ export function PostActions({
           onClick={() => updateStatus("published", true)}
           className="rounded-md border border-green-border bg-green-tint px-2.5 py-1 text-xs font-semibold text-green disabled:opacity-50"
         >
-          ↑ Publish
+          {t("publishAction")}
         </button>
       )}
       {status === "published" && (
@@ -57,7 +59,7 @@ export function PostActions({
           onClick={() => updateStatus("archived", false)}
           className="rounded-md border border-border bg-elevated px-2.5 py-1 text-xs font-semibold text-text-muted disabled:opacity-50"
         >
-          Archive
+          {t("archiveAction")}
         </button>
       )}
       {status === "archived" && (
@@ -67,7 +69,7 @@ export function PostActions({
           onClick={() => updateStatus("published", false)}
           className="rounded-md border border-accent-border bg-amber-faint px-2.5 py-1 text-xs font-semibold text-amber disabled:opacity-50"
         >
-          ↺ Restore
+          {t("restoreAction")}
         </button>
       )}
 

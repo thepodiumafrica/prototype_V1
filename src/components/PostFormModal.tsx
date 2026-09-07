@@ -6,20 +6,22 @@ import { createClient } from "@/lib/supabase/client";
 import { CATS, LANGS } from "@/lib/constants";
 import { wc } from "@/lib/format";
 import { Modal } from "@/components/Modal";
+import { useLocale } from "@/components/LocaleProvider";
+import type { DictKey } from "@/lib/i18n/dictionary";
 
-const CREATE_TOOLBAR: Array<[string, string, string, string]> = [
-  ["B", "Bold", "**", "**"],
-  ["I", "Italic", "*", "*"],
-  ["H2", "Heading", "## ", ""],
-  ["•", "Bullet", "- ", ""],
-  ["\"", "Quote", "> ", ""],
-  ["</>", "Code", "`", "`"],
+const CREATE_TOOLBAR: Array<[string, DictKey, string, string]> = [
+  ["B", "toolbarBold", "**", "**"],
+  ["I", "toolbarItalic", "*", "*"],
+  ["H2", "toolbarHeading", "## ", ""],
+  ["•", "toolbarBullet", "- ", ""],
+  ["\"", "toolbarQuote", "> ", ""],
+  ["</>", "toolbarCode", "`", "`"],
 ];
-const EDIT_TOOLBAR: Array<[string, string, string, string]> = [
-  ["B", "Bold", "**", "**"],
-  ["I", "Italic", "*", "*"],
-  ["H2", "Heading", "## ", ""],
-  ["•", "Bullet", "- ", ""],
+const EDIT_TOOLBAR: Array<[string, DictKey, string, string]> = [
+  ["B", "toolbarBold", "**", "**"],
+  ["I", "toolbarItalic", "*", "*"],
+  ["H2", "toolbarHeading", "## ", ""],
+  ["•", "toolbarBullet", "- ", ""],
 ];
 
 // Ported from ThePodium_v5.html's crWrap()/edWrap(): paired formats wrap
@@ -40,6 +42,11 @@ function wrapSelection(ta: HTMLTextAreaElement, before: string, after: string) {
 
 export type PostType = "Article" | "Forum Post";
 
+const POST_TYPE_KEY: Record<PostType, DictKey> = {
+  Article: "postTypeArticle",
+  "Forum Post": "postTypeForumPost",
+};
+
 export function PostFormModal({
   mode,
   postId,
@@ -54,6 +61,7 @@ export function PostFormModal({
   defaultType?: PostType;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const router = useRouter();
   const contentRef = useRef<HTMLTextAreaElement>(null);
   // Matches openCreateModal(): honour the requested default when the user
@@ -83,7 +91,7 @@ export function PostFormModal({
         .eq("id", postId)
         .single();
       if (fetchError || !data) {
-        setError("Couldn't load this post.");
+        setError(t("couldNotLoadPost"));
       } else {
         setTitle(data.title ?? "");
         setCategory(data.category || "technology");
@@ -96,6 +104,7 @@ export function PostFormModal({
       }
       setLoading(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, postId]);
 
   function toolbar(before: string, after: string) {
@@ -116,9 +125,9 @@ export function PostFormModal({
     setError(null);
     const trimmedTitle = title.trim();
     const content = contentRef.current?.value.trim() ?? "";
-    if (!trimmedTitle) return setError("Title required");
+    if (!trimmedTitle) return setError(t("titleRequired"));
     if (publishStatus === "published" && !content) {
-      return setError("Content required to publish");
+      return setError(t("contentRequiredToPublish"));
     }
 
     setPending(true);
@@ -128,7 +137,7 @@ export function PostFormModal({
     } = await supabase.auth.getUser();
     if (!user) {
       setPending(false);
-      return setError("Sign in required");
+      return setError(t("signInRequired"));
     }
 
     const { error: insertError } = await supabase.from("posts").insert({
@@ -154,7 +163,7 @@ export function PostFormModal({
     if (!postId) return;
     setError(null);
     const trimmedTitle = title.trim();
-    if (!trimmedTitle) return setError("Title required");
+    if (!trimmedTitle) return setError(t("titleRequired"));
 
     setPending(true);
     const supabase = createClient();
@@ -186,7 +195,7 @@ export function PostFormModal({
       <div className="mb-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <h2 className="font-serif text-lg font-bold text-text">
-            {mode === "create" ? "Create" : "Edit Post"}
+            {mode === "create" ? t("createHeading") : t("editPostHeading")}
           </h2>
         </div>
         <button
@@ -199,23 +208,23 @@ export function PostFormModal({
       </div>
 
       {loading ? (
-        <p className="text-sm text-text-muted">Loading…</p>
+        <p className="text-sm text-text-muted">{t("loadingEllipsis")}</p>
       ) : (
         <>
           {mode === "create" && availableTypes.length > 1 && (
             <div className="mb-3 flex gap-2">
-              {availableTypes.map((t) => (
+              {availableTypes.map((pt) => (
                 <button
-                  key={t}
+                  key={pt}
                   type="button"
-                  onClick={() => setPostType(t)}
+                  onClick={() => setPostType(pt)}
                   className={`rounded-md border px-3.5 py-1.5 text-[13px] font-medium ${
-                    postType === t
+                    postType === pt
                       ? "border-amber bg-amber-faint text-amber"
                       : "border-border text-text-muted"
                   }`}
                 >
-                  {t}
+                  {t(POST_TYPE_KEY[pt])}
                 </button>
               ))}
             </div>
@@ -224,18 +233,18 @@ export function PostFormModal({
           <div className="mb-1 flex flex-wrap gap-2.5">
             <div className="min-w-[160px] flex-1">
               <label className="form-label mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-                Title
+                {t("titleLabel")}
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="A compelling title…"
+                placeholder={t("titlePlaceholder")}
                 className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
               />
             </div>
             <div className="w-[140px]">
               <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-                Category
+                {t("categoryLabel")}
               </label>
               <select
                 value={category}
@@ -244,7 +253,7 @@ export function PostFormModal({
               >
                 {CATS.filter((c) => c.id !== "all").map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.l}
+                    {t(c.labelKey)}
                   </option>
                 ))}
               </select>
@@ -252,7 +261,7 @@ export function PostFormModal({
             {mode === "create" && (
               <div className="w-[120px]">
                 <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-                  Language
+                  {t("languageLabel")}
                 </label>
                 <select
                   value={language}
@@ -271,19 +280,21 @@ export function PostFormModal({
 
           <div className="mb-1 flex items-center justify-between">
             <label className="block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-              Content
+              {t("contentLabel")}
             </label>
             {mode === "create" && (
-              <span className="text-[11px] text-text-dim">{wordCount} words</span>
+              <span className="text-[11px] text-text-dim">
+                {t("wordCountLabel", { n: wordCount })}
+              </span>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-1 rounded-t-md border border-b-0 border-border bg-elevated p-1.5">
             {(mode === "create" ? CREATE_TOOLBAR : EDIT_TOOLBAR).map(
-              ([label, title, before, after]) => (
+              ([label, titleKey, before, after]) => (
                 <button
                   key={label}
                   type="button"
-                  title={title}
+                  title={t(titleKey)}
                   onClick={() => toolbar(before, after)}
                   className="min-w-[28px] rounded border border-border px-2 py-0.5 text-xs font-semibold text-text-muted"
                 >
@@ -296,18 +307,18 @@ export function PostFormModal({
             ref={contentRef}
             defaultValue=""
             onInput={(e) => setWordCount(wc(e.currentTarget.value))}
-            placeholder="Your ideas, analysis, or questions…"
+            placeholder={t("contentPlaceholder")}
             className="h-[140px] w-full rounded-b-md border border-border bg-surface px-3 py-2 text-sm text-text"
           />
 
           <div className="mt-2.5">
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-              Tags
+              {t("tagsLabel")}
             </label>
             <input
               value={tags}
               onChange={(e) => setTags(e.target.value)}
-              placeholder="technology, finance, culture…"
+              placeholder={t("tagsPlaceholder")}
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
             />
           </div>
@@ -327,7 +338,7 @@ export function PostFormModal({
                   onClick={() => handleCreate("published")}
                   className="rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-50"
                 >
-                  Publish
+                  {t("publish")}
                 </button>
                 <button
                   type="button"
@@ -335,7 +346,7 @@ export function PostFormModal({
                   onClick={() => handleCreate("draft")}
                   className="rounded-md border border-accent-border bg-amber-faint px-4 py-2 text-sm font-semibold text-amber disabled:opacity-50"
                 >
-                  Save Draft
+                  {t("saveDraft")}
                 </button>
               </>
             ) : (
@@ -346,7 +357,7 @@ export function PostFormModal({
                   onClick={() => handleSaveEdit(false)}
                   className="rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-50"
                 >
-                  Save Changes
+                  {t("save")}
                 </button>
                 {status === "draft" && (
                   <button
@@ -355,7 +366,7 @@ export function PostFormModal({
                     onClick={() => handleSaveEdit(true)}
                     className="rounded-md border border-green-border bg-green-tint px-4 py-2 text-sm font-semibold text-green disabled:opacity-50"
                   >
-                    Save & Publish
+                    {t("saveAndPublish")}
                   </button>
                 )}
               </>
@@ -365,12 +376,12 @@ export function PostFormModal({
               onClick={onClose}
               className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text"
             >
-              Cancel
+              {t("cancel")}
             </button>
           </div>
           {mode === "create" && (
             <p className="mt-2.5 text-[11px] text-text-dim">
-              Drafts are private. Publish when ready.
+              {t("draftsPrivateNote")}
             </p>
           )}
         </>

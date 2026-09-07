@@ -1,28 +1,33 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getT } from "@/lib/i18n/locale";
+import type { DictKey } from "@/lib/i18n/dictionary";
 
 // Ported verbatim from ThePodium_v5.html's renderAbout() -- this is the
-// platform's mission statement, not something to paraphrase. Paragraphs
-// alternate Fraunces italic / Outfit normal styling exactly as coded there,
-// and the closing paragraph is emphasized (text, not text-muted).
-const MISSION_PARAGRAPHS = [
-  `One of the merits of globalisation is the creation of a world where intellectual conversation can be approached with different perspectives of cultural understanding. Africa, however, is often portrayed from a western-dominated ethnocentric perspective leaving little space for its own people to express the realities they face or the origins of African worldviews.`,
-  `The Podium is a platform which wishes to bridge this gap and many more. It aims to engage the voices of Africans in the diaspora and within the continent to inform, share, and engage in important conversations. This dialogue has the potential to create innovation, cross-cultural understanding, and a better appreciation of personal provenance.`,
-  `Through The Podium's focus on relevant topics such as art, history, economics, scientific innovation, technology, education, and business in the form of thought-provoking, engaging, user-generated content it will be possible to take control of the African narrative.`,
-  `Every question has an answer. All information can find an interested audience. Every need has resources that can directly address it. Every conversation has a community ready to engage in it. The Podium, therefore, will create a place of connection and bridge gaps that have too long been in existence.`,
+// platform's mission statement, not something to paraphrase (its French
+// translation aims for the same fluency, not a literal word-for-word
+// rendering -- see dictionary.ts's aboutMission1-4). Paragraphs alternate
+// Fraunces italic / Outfit normal styling exactly as coded there, and the
+// closing paragraph is emphasized (text, not text-muted).
+const MISSION_KEYS: DictKey[] = [
+  "aboutMission1",
+  "aboutMission2",
+  "aboutMission3",
+  "aboutMission4",
 ];
 
 // The subset of renderAbout()'s offerings grid this page shows.
-const OFFERINGS: [string, string, string][] = [
-  ["✦", "Articles", "Long-form analysis"],
-  ["◌", "Forum", "Open discussions"],
-  ["▲", "Groups", "Topic communities"],
-  ["◎", "Spaces", "Networking events"],
-  ["⬡", "Partnerships", "Find collaborators"],
-  ["◈", "Resources", "Finance & career guides"],
+const OFFERINGS: [string, DictKey, DictKey][] = [
+  ["✦", "articles", "aboutOfferArticlesSub"],
+  ["◌", "forum", "aboutOfferForumSub"],
+  ["▲", "groups", "aboutOfferGroupsSub"],
+  ["◎", "spaces", "aboutOfferSpacesSub"],
+  ["⬡", "partnerships", "aboutOfferPartnershipsSub"],
+  ["◈", "resources", "aboutOfferResourcesSub"],
 ];
 
 export default async function AboutPage() {
+  const { t } = await getT();
   const supabase = await createClient();
   const {
     data: { user },
@@ -48,32 +53,32 @@ export default async function AboutPage() {
             </span>
           </span>
         </div>
-        <p className="text-xs tracking-wide text-text-dim">Our Mission</p>
+        <p className="text-xs tracking-wide text-text-dim">{t("aboutEyebrow")}</p>
       </div>
 
-      {MISSION_PARAGRAPHS.map((p, i) => (
+      {MISSION_KEYS.map((key, i) => (
         <p
-          key={i}
+          key={key}
           className={`mb-[22px] text-base leading-[1.9] ${
             i === 3 ? "text-text" : "text-text-muted"
           } ${i % 2 === 0 ? "font-serif italic" : "font-sans not-italic"}`}
         >
-          {p}
+          {t(key)}
         </p>
       ))}
 
       <div className="my-7 h-px bg-border" />
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {OFFERINGS.map(([icon, title, subtitle]) => (
+        {OFFERINGS.map(([icon, titleKey, subtitleKey]) => (
           <div
-            key={title}
+            key={titleKey}
             className="rounded-lg border border-border bg-surface p-3 text-center"
           >
             <div className="mb-1 text-lg text-amber">{icon}</div>
-            <div className="mb-0.5 text-xs font-semibold text-text">{title}</div>
+            <div className="mb-0.5 text-xs font-semibold text-text">{t(titleKey)}</div>
             <div className="text-[11px] leading-relaxed text-text-dim">
-              {subtitle}
+              {t(subtitleKey)}
             </div>
           </div>
         ))}
@@ -85,7 +90,7 @@ export default async function AboutPage() {
             href="/feed"
             className="inline-block rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary"
           >
-            Go to Your Feed →
+            {t("goToFeed")}
           </Link>
         ) : (
           <div className="flex flex-wrap justify-center gap-2.5">
@@ -93,13 +98,13 @@ export default async function AboutPage() {
               href="/signup"
               className="inline-block rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary"
             >
-              Join The Podium
+              {t("joinThePodium")}
             </Link>
             <Link
               href="/articles"
               className="inline-block rounded-md border border-border px-4 py-2 text-sm font-semibold text-text"
             >
-              Browse as Guest
+              {t("browseAsGuest")}
             </Link>
           </div>
         )}

@@ -4,6 +4,7 @@ import { can } from "@/lib/perms";
 import type { UserType } from "@/lib/constants";
 import { CommentItem, type ThreadComment } from "@/components/CommentItem";
 import { CommentComposer } from "@/components/CommentComposer";
+import { getT } from "@/lib/i18n/locale";
 
 type Row = {
   id: string;
@@ -26,6 +27,7 @@ export async function CommentThread({
   viewerId: string | null;
   viewerType: UserType | null;
 }) {
+  const { t } = await getT();
   const supabase = await createClient();
 
   // Top-level comments on this post.
@@ -96,7 +98,7 @@ export async function CommentThread({
   return (
     <div>
       <h2 className="mb-3.5 text-[15px] font-semibold text-text">
-        Comments ({totalCount})
+        {t("commentsHeading", { n: totalCount })}
       </h2>
 
       {comments.map((c) => (
@@ -114,13 +116,13 @@ export async function CommentThread({
       ) : (
         <p className="mt-3 text-[13px] text-text-dim">
           {viewerId ? (
-            "Your account type cannot comment."
+            t("cannotComment")
           ) : (
             <>
               <Link href="/login" className="text-amber">
-                Sign in
+                {t("signin")}
               </Link>{" "}
-              to join the conversation.
+              {t("signInToJoin")}
             </>
           )}
         </p>

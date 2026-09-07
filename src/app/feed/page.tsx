@@ -8,6 +8,7 @@ import { todayGreeting } from "@/lib/format";
 import { rankFeedPosts } from "@/lib/feed-ranking";
 import { fetchBookmarkedIds } from "@/lib/post-list";
 import type { UserType } from "@/lib/constants";
+import { getT } from "@/lib/i18n/locale";
 
 type Row = {
   id: string;
@@ -46,6 +47,7 @@ export default async function FeedPage({
 }) {
   const { mode: modeParam } = await searchParams;
   const mode = modeParam === "continent" || modeParam === "diaspora" ? modeParam : "both";
+  const { t, locale } = await getT();
 
   const supabase = await createClient();
   const {
@@ -125,14 +127,13 @@ export default async function FeedPage({
       <div className="mb-4 flex items-center justify-between gap-4">
         <div>
           <div className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-dim">
-            Your Feed
+            {t("yourFeed")}
           </div>
           <h1 className="font-serif text-[26px] font-semibold text-text">
             {greetingWord}, @{profile.username}
           </h1>
           <div className="mt-0.5 text-xs text-text-dim">
-            &quot;Welcome&quot; in {greetingLang} — a different African
-            language greets you each day
+            {t("feedGreetingNote", { lang: greetingLang })}
           </div>
         </div>
         <FeedToggle active={mode} />
@@ -141,17 +142,17 @@ export default async function FeedPage({
       {shown.length === 0 ? (
         <div className="px-5 py-16 text-center text-text-dim">
           <div className="mb-2.5 font-serif text-lg text-text-muted">
-            Your feed is empty
+            {t("feedEmptyHeading")}
           </div>
           <Proverb forKey="feed" />
           <p className="mb-5 text-sm">
-            Follow creators and set interests to personalise it.
+            {t("feedEmptyBody")}
           </p>
           <Link
             href="/articles"
             className="inline-block rounded-md bg-amber px-4 py-2 text-sm font-semibold text-on-primary"
           >
-            Browse Articles →
+            {t("browseArticles")}
           </Link>
         </div>
       ) : (
@@ -159,13 +160,17 @@ export default async function FeedPage({
           <div key={post.id}>
             {reason && (
               <div className="mb-0.5 pl-0.5 text-[11px] text-text-dim">
-                · {reason}
+                ·{" "}
+                {reason.key === "feedReasonFollowing"
+                  ? t(reason.key, { username: reason.username })
+                  : t(reason.key)}
               </div>
             )}
             <PostCard
               post={post}
               signedIn
               bookmarked={bookmarkedIds.has(post.id)}
+              locale={locale}
             />
           </div>
         ))

@@ -1,13 +1,16 @@
 import Link from "next/link";
+import { getT } from "@/lib/i18n/locale";
+import type { DictKey } from "@/lib/i18n/dictionary";
 
-const MODES = [
-  { id: "both", label: "🌐 All" },
-  { id: "continent", label: "🌍 Continent" },
-  { id: "diaspora", label: "✈️ Diaspora" },
-] as const;
+const MODES: { id: string; labelKey: DictKey }[] = [
+  { id: "both", labelKey: "all" },
+  { id: "continent", labelKey: "continent" },
+  { id: "diaspora", labelKey: "diaspora" },
+];
 
 // Ported from ThePodium_v5.html's .feed-toggle/.ft-btn (STATE.feedMode).
-export function FeedToggle({ active }: { active: string }) {
+export async function FeedToggle({ active }: { active: string }) {
+  const { t } = await getT();
   return (
     <div className="flex gap-1 rounded-full bg-elevated p-[3px]">
       {MODES.map((m) => (
@@ -18,7 +21,7 @@ export function FeedToggle({ active }: { active: string }) {
             active === m.id ? "bg-surface text-amber" : "text-text-muted"
           }`}
         >
-          {m.label}
+          {t(m.labelKey)}
         </Link>
       ))}
     </div>

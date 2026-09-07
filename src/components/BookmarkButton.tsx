@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useLocale } from "@/components/LocaleProvider";
 
 // Ported from ThePodium_v5.html's toggleBookmark(). Bookmarks are a private
 // reading list (see the RLS policy on the bookmarks table), so unlike likes
@@ -17,6 +18,7 @@ export function BookmarkButton({
   initialBookmarked: boolean;
   variant?: "icon" | "labeled";
 }) {
+  const { t } = useLocale();
   const router = useRouter();
   const [bookmarked, setBookmarked] = useState(initialBookmarked);
   const [pending, setPending] = useState(false);
@@ -61,7 +63,7 @@ export function BookmarkButton({
             : "border-border text-text-muted"
         }`}
       >
-        {bookmarked ? "🔖 Saved" : "🏷 Save"}
+        {bookmarked ? t("bookmarkSaved") : t("bookmarkSave")}
       </button>
     );
   }
@@ -71,7 +73,7 @@ export function BookmarkButton({
       type="button"
       onClick={toggle}
       disabled={pending}
-      title={bookmarked ? "Remove bookmark" : "Bookmark"}
+      title={bookmarked ? t("removeBookmark") : t("bookmarkTitle")}
       className={`bg-transparent text-sm ${
         bookmarked ? "text-amber" : "text-text-dim"
       }`}

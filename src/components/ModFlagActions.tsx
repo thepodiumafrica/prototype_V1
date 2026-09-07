@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Modal } from "@/components/Modal";
+import { useLocale } from "@/components/LocaleProvider";
 
 // Ported from ThePodium_v5.html's resolveFlag()/markDisputed()/
 // confirmDispute(). Both RPCs are mod-only, enforced inside the function
@@ -18,12 +19,11 @@ export function ModFlagActions({
   postId: string;
   canDispute: boolean;
 }) {
+  const { t } = useLocale();
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
-  const [note, setNote] = useState(
-    "Some claims in this article have not been independently verified.",
-  );
+  const [note, setNote] = useState(t("disputeNoteDefault"));
   const [error, setError] = useState<string | null>(null);
 
   async function resolve(action: "confirm" | "dismiss") {
@@ -41,7 +41,7 @@ export function ModFlagActions({
 
   async function submitDispute() {
     const trimmed = note.trim();
-    if (!trimmed) return setError("Write a note for readers");
+    if (!trimmed) return setError(t("writeNoteForReaders"));
     setPending(true);
     setError(null);
     const supabase = createClient();
@@ -63,7 +63,7 @@ export function ModFlagActions({
         onClick={() => resolve("confirm")}
         className="rounded-md border border-red-border bg-red-tint px-3 py-1.5 text-xs font-semibold text-red disabled:opacity-50"
       >
-        Remove Content
+        {t("removeContent")}
       </button>
       <button
         type="button"
@@ -71,7 +71,7 @@ export function ModFlagActions({
         onClick={() => resolve("dismiss")}
         className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-text disabled:opacity-50"
       >
-        Dismiss
+        {t("dismiss")}
       </button>
       {canDispute && (
         <button
@@ -80,7 +80,7 @@ export function ModFlagActions({
           onClick={() => setDisputeOpen(true)}
           className="rounded-md border border-accent-border bg-amber-faint px-3 py-1.5 text-xs font-semibold text-amber disabled:opacity-50"
         >
-          Mark Disputed
+          {t("markDisputed")}
         </button>
       )}
       {error && (
@@ -92,14 +92,13 @@ export function ModFlagActions({
       {disputeOpen && (
         <Modal onClose={() => setDisputeOpen(false)}>
           <h2 className="mb-1.5 font-serif text-lg font-bold text-text">
-            Mark as Disputed
+            {t("markAsDisputedHeading")}
           </h2>
           <p className="mb-4 text-sm leading-relaxed text-text-muted">
-            The post stays visible with a public advisory banner. Write the
-            note readers will see.
+            {t("markDisputedBody")}
           </p>
           <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-            Dispute note
+            {t("disputeNoteLabel")}
           </label>
           <textarea
             value={note}
@@ -118,14 +117,14 @@ export function ModFlagActions({
               onClick={submitDispute}
               className="rounded-md border border-accent-border bg-amber-faint px-4 py-2 text-sm font-semibold text-amber disabled:opacity-50"
             >
-              Apply Dispute Label
+              {t("applyDisputeLabel")}
             </button>
             <button
               type="button"
               onClick={() => setDisputeOpen(false)}
               className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text"
             >
-              Cancel
+              {t("cancel")}
             </button>
           </div>
         </Modal>

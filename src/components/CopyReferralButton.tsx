@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/components/LocaleProvider";
 
 export function CopyReferralButton({ code }: { code: string }) {
+  const { t } = useLocale();
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -17,7 +19,7 @@ export function CopyReferralButton({ code }: { code: string }) {
       onClick={copy}
       className="rounded-md border border-border bg-elevated px-2.5 py-1 text-xs font-semibold text-text-muted"
     >
-      {copied ? "Copied!" : "Copy"}
+      {copied ? t("linkCopied") : t("copy")}
     </button>
   );
 }

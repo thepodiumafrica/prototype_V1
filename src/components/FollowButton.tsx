@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useLocale } from "@/components/LocaleProvider";
 
 // Ported from ThePodium_v5.html's toggleFollow(). The actual permission
 // enforcement (follow/beFollowed by user_type) lives in the follows table's
@@ -15,6 +16,7 @@ export function FollowButton({
   targetId: string;
   initialIsFollowing: boolean;
 }) {
+  const { t } = useLocale();
   const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [pending, setPending] = useState(false);
@@ -45,7 +47,7 @@ export function FollowButton({
         .from("follows")
         .insert({ follower: user.id, following: targetId });
       if (insErr) {
-        setError("Couldn't follow this account.");
+        setError(t("couldNotFollow"));
       } else {
         setIsFollowing(true);
       }
@@ -67,7 +69,7 @@ export function FollowButton({
             : "rounded-md bg-amber px-3 py-1.5 text-sm font-semibold text-on-primary disabled:opacity-50"
         }
       >
-        {isFollowing ? "Unfollow" : "Follow"}
+        {isFollowing ? t("unfollow") : t("follow")}
       </button>
       {error && <span className="text-xs text-red">{error}</span>}
     </div>

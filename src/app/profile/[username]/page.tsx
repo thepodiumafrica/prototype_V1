@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { computeTrust } from "@/lib/trust";
 import { can } from "@/lib/perms";
 import type { UserType } from "@/lib/constants";
+import { INTEREST_KEY } from "@/lib/constants";
 import {
   TypeBadge,
   VerifiedBadge,
@@ -16,6 +17,9 @@ import { CopyReferralButton } from "@/components/CopyReferralButton";
 import { PostCard, type PostCardPost } from "@/components/PostCard";
 import { Proverb } from "@/components/Proverb";
 import { fetchBookmarkedIds } from "@/lib/post-list";
+import { getT } from "@/lib/i18n/locale";
+import type { DictKey } from "@/lib/i18n/dictionary";
+import { countryLabel, expertiseLabel } from "@/lib/i18n/data-labels";
 
 const TABS = ["published", "drafts", "archived", "bookmarks"] as const;
 type Tab = (typeof TABS)[number];
@@ -23,6 +27,18 @@ const TAB_STATUS: Partial<Record<Tab, string>> = {
   published: "published",
   drafts: "draft",
   archived: "archived",
+};
+const TAB_LABEL_KEY: Record<Tab, DictKey> = {
+  published: "profileTabPublished",
+  drafts: "profileTabDrafts",
+  archived: "profileTabArchived",
+  bookmarks: "profileTabBookmarks",
+};
+const TAB_EMPTY_KEY: Record<Tab, DictKey> = {
+  published: "emptyPublished",
+  drafts: "emptyDrafts",
+  archived: "emptyArchived",
+  bookmarks: "emptyBookmarks",
 };
 
 type BookmarkedPostRow = {
@@ -59,6 +75,7 @@ export default async function ProfilePage({
 }) {
   const { username } = await params;
   const { tab: tabParam } = await searchParams;
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const { data: profile } = await supabase
@@ -72,7 +89,7 @@ export default async function ProfilePage({
   if (!profile) {
     return (
       <main className="mx-auto w-full max-w-2xl px-5 py-16">
-        <p className="text-text-muted">User not found.</p>
+        <p className="text-text-muted">{t("userNotFound")}</p>
       </main>
     );
   }
@@ -277,18 +294,25 @@ export default async function ProfilePage({
               <h1 className="font-serif text-xl font-bold text-text">
                 @{profile.username}
               </h1>
-              <TypeBadge type={profile.user_type as UserType} />
-              {profile.verified && <VerifiedBadge />}
-              {profile.founding_creator && <FoundingBadge />}
-              <TrustBadge level={trustLevel} />
+              <TypeBadge type={profile.user_type as UserType} locale={locale} />
+              {profile.verified && <VerifiedBadge locale={locale} />}
+              {profile.founding_creator && <FoundingBadge locale={locale} />}
+              <TrustBadge level={trustLevel} locale={locale} />
               <LocationBadge
                 africanIdentity={profile.african_identity}
-                countryOrigin={profile.country_origin}
-                countryResidence={profile.country_residence}
+                countryOrigin={
+                  profile.country_origin ? countryLabel(profile.country_origin, locale) : null
+                }
+                countryResidence={
+                  profile.country_residence
+                    ? countryLabel(profile.country_residence, locale)
+                    : null
+                }
+                locale={locale}
               />
             </div>
             <p className="mb-2 text-sm leading-relaxed text-text-muted">
-              {profile.bio || "No bio yet."}
+              {profile.bio || t("noBioYet")}
             </p>
             {profile.profession && (
               <p className="mb-2 text-xs text-text-muted/80">
@@ -299,15 +323,15 @@ export default async function ProfilePage({
             <div className="flex flex-wrap gap-4 text-[13px] text-text-muted/80">
               <span>
                 <strong className="text-text">{followerCount ?? 0}</strong>{" "}
-                followers
+                {t("followersLabel")}
               </span>
               <span>
                 <strong className="text-text">{followingCount ?? 0}</strong>{" "}
-                following
+                {t("followingLabel")}
               </span>
               <span>
                 <strong className="text-text">{publishedCount ?? 0}</strong>{" "}
-                published
+                {t("publishedLabel")}
               </span>
             </div>
           </div>
@@ -323,7 +347,7 @@ export default async function ProfilePage({
                 href="/settings"
                 className="rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-text"
               >
-                Edit Profile
+                {t("editProfileLink")}
               </Link>
             )}
           </div>
@@ -332,7 +356,7 @@ export default async function ProfilePage({
         {profile.expertise && profile.expertise.length > 0 && (
           <div className="mb-3.5">
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted/80">
-              Expertise
+              {t("expertiseHeading")}
             </div>
             <div className="flex flex-wrap gap-2">
               {profile.expertise.map((ex: string) => (
@@ -340,7 +364,7 @@ export default async function ProfilePage({
                   key={ex}
                   className="rounded-md border border-border bg-elevated px-2.5 py-1 text-xs text-text"
                 >
-                  {ex}
+                  {expertiseLabel(ex, locale)}
                 </span>
               ))}
             </div>
@@ -350,7 +374,7 @@ export default async function ProfilePage({
         {profile.interests && profile.interests.length > 0 && (
           <div>
             <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted/80">
-              Interests
+              {t("interestsHeading")}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {profile.interests.map((i: string) => (
@@ -358,7 +382,7 @@ export default async function ProfilePage({
                   key={i}
                   className="rounded border border-accent-border bg-amber-faint px-1.5 py-0.5 text-[11px] text-amber-dim"
                 >
-                  #{i}
+                  #{(INTEREST_KEY as Record<string, DictKey>)[i] ? t((INTEREST_KEY as Record<string, DictKey>)[i]) : i}
                 </span>
               ))}
             </div>
@@ -368,7 +392,7 @@ export default async function ProfilePage({
         {isOwn && profile.referral_code && (
           <div className="mt-3.5 border-t border-border pt-3.5">
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted/80">
-              Your Referral Code
+              {t("yourReferralCode")}
             </div>
             <div className="flex items-center gap-2.5">
               <code className="rounded-md bg-elevated px-3 py-1.5 font-mono text-sm text-amber">
@@ -382,17 +406,17 @@ export default async function ProfilePage({
 
       {isOwn && (
         <div className="mb-4 mt-5 flex flex-wrap gap-1.5">
-          {TABS.map((t) => (
+          {TABS.map((tb) => (
             <Link
-              key={t}
-              href={`/profile/${username}${t === "published" ? "" : `?tab=${t}`}`}
+              key={tb}
+              href={`/profile/${username}${tb === "published" ? "" : `?tab=${tb}`}`}
               className={`rounded-md border px-3 py-1.5 text-xs font-semibold capitalize ${
-                tab === t
+                tab === tb
                   ? "border-amber bg-amber-faint text-amber"
                   : "border-border text-text-muted"
               }`}
             >
-              {t} ({tabCounts[t]})
+              {t(TAB_LABEL_KEY[tb])} ({tabCounts[tb]})
             </Link>
           ))}
         </div>
@@ -403,7 +427,7 @@ export default async function ProfilePage({
           <div className="text-sm text-text-muted/80">
             {tab === "drafts" && <Proverb forKey="drafts" />}
             {tab === "bookmarks" && <Proverb forKey="saved" />}
-            No {tab === "published" ? "posts" : tab === "bookmarks" ? "saved articles" : tab} yet.
+            {t(TAB_EMPTY_KEY[tab])}
           </div>
         ) : (
           posts.map((p, i) => (
@@ -419,6 +443,7 @@ export default async function ProfilePage({
               bookmarked={
                 tab === "bookmarks" ? true : bookmarkedIds.has(p.id)
               }
+              locale={locale}
             />
           ))
         )}
