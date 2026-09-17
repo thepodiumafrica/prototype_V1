@@ -12,7 +12,7 @@ type Row = {
   content: string;
   created_at: string;
   nlikes: number;
-  profiles: { id: string; username: string } | null;
+  profiles: { id: string; username: string; is_example: boolean } | null;
 };
 
 // Ported from the comments section of ThePodium_v5.html's
@@ -34,7 +34,7 @@ export async function CommentThread({
   const { data: topRows, error } = await supabase
     .from("posts")
     .select(
-      "id, parent_id, content, created_at, nlikes, profiles!posts_creator_fkey(id, username)",
+      "id, parent_id, content, created_at, nlikes, profiles!posts_creator_fkey(id, username, is_example)",
     )
     .eq("otype", "Comment")
     .eq("parent_id", postId)
@@ -51,7 +51,7 @@ export async function CommentThread({
     const { data, error: replyError } = await supabase
       .from("posts")
       .select(
-        "id, parent_id, content, created_at, nlikes, profiles!posts_creator_fkey(id, username)",
+        "id, parent_id, content, created_at, nlikes, profiles!posts_creator_fkey(id, username, is_example)",
       )
       .eq("otype", "Comment")
       .in(
@@ -81,6 +81,7 @@ export async function CommentThread({
     id: r.id,
     creator: r.profiles?.username ?? "unknown",
     creatorId: r.profiles?.id ?? "",
+    creatorIsExample: r.profiles?.is_example ?? false,
     content: r.content,
     created_at: r.created_at,
     nlikes: r.nlikes,

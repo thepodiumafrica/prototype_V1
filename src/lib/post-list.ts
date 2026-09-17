@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PostCardPost } from "@/components/PostCard";
 import type { UserType } from "@/lib/constants";
+import { getRetiredExampleCategories, isRetiredExample } from "@/lib/example-retirement";
 
 type Row = {
   id: string;
@@ -15,6 +16,7 @@ type Row = {
   disputed: boolean;
   dispute_note: string;
   created_at: string;
+  is_example: boolean;
   profiles: {
     username: string;
     user_type: UserType;
@@ -32,7 +34,7 @@ export async function fetchPublishedPosts(
   let query = supabase
     .from("posts")
     .select(
-      "id, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, profiles!posts_creator_fkey(username, user_type, verified)",
+      "id, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, is_example, profiles!posts_creator_fkey(username, user_type, verified)",
     )
     .eq("otype", otype)
     .eq("status", "published")
@@ -45,11 +47,14 @@ export async function fetchPublishedPosts(
     query = query.or(`category.eq.${category},tags.cs.{${category}}`);
   }
 
-  const { data, error } = await query;
+  const [{ data, error }, retiredCategories] = await Promise.all([
+    query,
+    getRetiredExampleCategories(supabase),
+  ]);
   if (error) console.error(`${otype} list query failed:`, error);
 
   return ((data ?? []) as unknown as Row[])
-    .filter((r) => r.profiles)
+    .filter((r) => r.profiles && !isRetiredExample({ otype, category: r.category, is_example: r.is_example }, retiredCategories))
     .map((r) => ({
       id: r.id,
       creator: r.profiles!.username,
@@ -68,6 +73,7 @@ export async function fetchPublishedPosts(
       disputed: r.disputed,
       dispute_note: r.dispute_note,
       created_at: r.created_at,
+      is_example: r.is_example,
     }));
 }
 

@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:examples": "node scripts/seed-examples.mjs",
+    "clear:examples": "node scripts/clear-examples.mjs",
+    "toggle:example-retirement": "node scripts/toggle-example-retirement.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

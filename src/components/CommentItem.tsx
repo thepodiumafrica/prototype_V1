@@ -6,6 +6,7 @@ import { Avatar } from "@/components/Avatar";
 import { CommentLikeButton } from "@/components/CommentLikeButton";
 import { CommentComposer } from "@/components/CommentComposer";
 import { FlagButton } from "@/components/FlagButton";
+import { ExampleBadge } from "@/components/Badge";
 import { ago } from "@/lib/format";
 import { useLocale } from "@/components/LocaleProvider";
 
@@ -13,6 +14,7 @@ export interface ThreadComment {
   id: string;
   creator: string;
   creatorId: string;
+  creatorIsExample: boolean;
   content: string;
   created_at: string;
   nlikes: number;
@@ -52,6 +54,7 @@ export function CommentItem({
         <span className="text-[11px] text-text-dim">
           · {ago(comment.created_at, locale)}
         </span>
+        {comment.creatorIsExample && <ExampleBadge locale={locale} />}
         {signedIn && viewerId && viewerId !== comment.creatorId && (
           <FlagButton
             entityId={comment.id}
@@ -103,6 +106,7 @@ export function CommentItem({
                 <span className="text-[10px] text-text-dim">
                   · {ago(r.created_at, locale)}
                 </span>
+                {r.creatorIsExample && <ExampleBadge locale={locale} />}
               </div>
               <p className="text-[13px] leading-relaxed text-text-muted">
                 {r.content}

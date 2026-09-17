@@ -8,6 +8,7 @@ import { Avatar } from "@/components/Avatar";
 import {
   TypeBadge,
   VerifiedBadge,
+  ExampleBadge,
   TrustBadge,
   LocationBadge,
   LangBadge,
@@ -50,7 +51,7 @@ export async function PostDetail({
   const { data: post, error: postError } = await supabase
     .from("posts")
     .select(
-      "id, creator, otype, status, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, profiles!posts_creator_fkey(id, username, user_type, verified, african_identity, country_origin, country_residence)",
+      "id, creator, otype, status, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, is_example, profiles!posts_creator_fkey(id, username, user_type, verified, african_identity, country_origin, country_residence, is_example)",
     )
     .eq("id", id)
     .eq("otype", otype)
@@ -74,6 +75,7 @@ export async function PostDetail({
     african_identity: string | null;
     country_origin: string | null;
     country_residence: string | null;
+    is_example: boolean;
   };
   const isOwner = authUser?.id === creator.id;
 
@@ -166,6 +168,7 @@ export async function PostDetail({
               </Link>
               <TypeBadge type={creator.user_type} locale={locale} />
               {creator.verified && <VerifiedBadge locale={locale} />}
+              {creator.is_example && <ExampleBadge locale={locale} />}
               <TrustBadge level={trustLevel} locale={locale} />
               <LocationBadge
                 africanIdentity={creator.african_identity}

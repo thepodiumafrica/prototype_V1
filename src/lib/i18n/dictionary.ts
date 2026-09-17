@@ -182,6 +182,9 @@ export const en = {
   typeNewsAgency: "News Agency",
   verified: "VERIFIED",
   founding: "Founding",
+  example: "Example",
+  exampleProfileNote:
+    "This is a sample account for demonstration — not a real person.",
   trustLevelLabel: "Lvl {n} · {label}",
   trustNew: "New",
   trustRising: "Rising",
@@ -595,6 +598,9 @@ export const fr: Record<DictKey, string> = {
   typeNewsAgency: "Agence de presse",
   verified: "VÉRIFIÉ",
   founding: "Fondateur",
+  example: "Exemple",
+  exampleProfileNote:
+    "Ceci est un compte fictif à titre de démonstration — pas une vraie personne.",
   trustLevelLabel: "Niv. {n} · {label}",
   trustNew: "Nouveau",
   trustRising: "En progression",

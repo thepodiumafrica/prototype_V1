@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
-import { TypeBadge, VerifiedBadge, LangBadge, StatusBadge } from "@/components/Badge";
+import { TypeBadge, VerifiedBadge, ExampleBadge, LangBadge, StatusBadge } from "@/components/Badge";
 import { Tag } from "@/components/Tag";
 import { PostActions } from "@/components/PostActions";
 import { BookmarkButton } from "@/components/BookmarkButton";
@@ -26,6 +26,7 @@ export interface PostCardPost {
   disputed: boolean;
   dispute_note: string;
   created_at: string;
+  is_example?: boolean;
 }
 
 // Ported from ThePodium_v5.html's cardHtml() (no series/poll badges --
@@ -69,6 +70,7 @@ export function PostCard({
             </span>
             <TypeBadge type={post.creator_type} locale={locale} />
             {post.creator_verified && <VerifiedBadge locale={locale} />}
+            {post.is_example && <ExampleBadge locale={locale} />}
           </div>
           <div className="text-[11px] text-text-dim">{ago(post.created_at, locale)}</div>
         </div>

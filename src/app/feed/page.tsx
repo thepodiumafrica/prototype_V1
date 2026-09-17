@@ -7,6 +7,7 @@ import { Proverb } from "@/components/Proverb";
 import { todayGreeting } from "@/lib/format";
 import { rankFeedPosts } from "@/lib/feed-ranking";
 import { fetchBookmarkedIds } from "@/lib/post-list";
+import { getRetiredExampleCategories, isRetiredExample } from "@/lib/example-retirement";
 import type { UserType } from "@/lib/constants";
 import { getT } from "@/lib/i18n/locale";
 
@@ -24,6 +25,7 @@ type Row = {
   disputed: boolean;
   dispute_note: string;
   created_at: string;
+  is_example: boolean;
   profiles: {
     id: string;
     username: string;
@@ -72,20 +74,24 @@ export default async function FeedPage({
   const interests = new Set<string>(profile.interests ?? []);
   const bookmarkedIds = await fetchBookmarkedIds(supabase, authUser.id);
 
-  const { data, error } = await supabase
-    .from("posts")
-    .select(
-      "id, otype, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, profiles!posts_creator_fkey(id, username, user_type, verified, african_identity)",
-    )
-    .in("otype", ["Article", "Forum Post"])
-    .eq("status", "published")
-    .eq("flagged", false)
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const [{ data, error }, retiredCategories] = await Promise.all([
+    supabase
+      .from("posts")
+      .select(
+        "id, otype, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, is_example, profiles!posts_creator_fkey(id, username, user_type, verified, african_identity)",
+      )
+      .in("otype", ["Article", "Forum Post"])
+      .eq("status", "published")
+      .eq("flagged", false)
+      .order("created_at", { ascending: false })
+      .limit(200),
+    getRetiredExampleCategories(supabase),
+  ]);
   if (error) console.error("feed query failed:", error);
 
   const rows = ((data ?? []) as unknown as Row[]).filter((r) => {
     if (!r.profiles) return false;
+    if (isRetiredExample(r, retiredCategories)) return false;
     if (mode === "continent") return r.profiles.african_identity === "continent";
     if (mode === "diaspora") return r.profiles.african_identity === "diaspora";
     return true;
@@ -117,6 +123,7 @@ export default async function FeedPage({
       disputed: r.disputed,
       dispute_note: r.dispute_note,
       created_at: r.created_at,
+      is_example: r.is_example,
     } satisfies PostCardPost,
   }));
 

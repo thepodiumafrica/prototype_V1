@@ -44,6 +44,19 @@ export function FoundingBadge({ locale = "en" }: { locale?: Locale }) {
   );
 }
 
+// New for launch seed content: marks a post, comment, or profile as sample
+// content shipped to show visitors the shape of the platform before real
+// creators publish -- never a real person or a real piece of writing. Uses
+// the same muted gray as StatusBadge's "archived" state deliberately: this
+// is informational, not a warning, so it should read as quiet, not alarming.
+export function ExampleBadge({ locale = "en" }: { locale?: Locale }) {
+  return (
+    <span className={`${base} text-gray-text bg-gray-tint border-gray-border`}>
+      {translate(locale, "example")}
+    </span>
+  );
+}
+
 const TRUST_LABEL_KEY: DictKey[] = [
   "trustNew", // index 0 is never used (levels run 1-5) but keeps indices aligned
   "trustNew",

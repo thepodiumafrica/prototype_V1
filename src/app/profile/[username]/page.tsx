@@ -8,6 +8,7 @@ import {
   TypeBadge,
   VerifiedBadge,
   FoundingBadge,
+  ExampleBadge,
   TrustBadge,
   LocationBadge,
 } from "@/components/Badge";
@@ -58,6 +59,7 @@ type BookmarkedPostRow = {
     created_at: string;
     status: string;
     creator: string;
+    is_example: boolean;
     profiles: {
       username: string;
       user_type: UserType;
@@ -81,7 +83,7 @@ export default async function ProfilePage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, username, user_type, verified, founding_creator, bio, profession, industry, african_identity, country_origin, country_residence, expertise, interests, referral_code",
+      "id, username, user_type, verified, founding_creator, is_example, bio, profession, industry, african_identity, country_origin, country_residence, expertise, interests, referral_code",
     )
     .eq("username", username)
     .maybeSingle();
@@ -122,7 +124,7 @@ export default async function ProfilePage({
   }
 
   const postSelect =
-    "id, otype, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, status";
+    "id, otype, category, language, title, content, tags, nlikes, ncomments, views, disputed, dispute_note, created_at, status, is_example";
 
   const [
     { count: followerCount },
@@ -232,6 +234,7 @@ export default async function ProfilePage({
             disputed: p.disputed,
             dispute_note: p.dispute_note,
             created_at: p.created_at,
+            is_example: p.is_example,
           };
         })
       : (
@@ -250,6 +253,7 @@ export default async function ProfilePage({
             dispute_note: string;
             created_at: string;
             status: string;
+            is_example: boolean;
           }[]
         ).map((p) => ({
           id: p.id,
@@ -269,6 +273,7 @@ export default async function ProfilePage({
           disputed: p.disputed,
           dispute_note: p.dispute_note,
           created_at: p.created_at,
+          is_example: p.is_example,
         }));
 
   const canShowFollow =
@@ -297,6 +302,7 @@ export default async function ProfilePage({
               <TypeBadge type={profile.user_type as UserType} locale={locale} />
               {profile.verified && <VerifiedBadge locale={locale} />}
               {profile.founding_creator && <FoundingBadge locale={locale} />}
+              {profile.is_example && <ExampleBadge locale={locale} />}
               <TrustBadge level={trustLevel} locale={locale} />
               <LocationBadge
                 africanIdentity={profile.african_identity}
@@ -311,6 +317,11 @@ export default async function ProfilePage({
                 locale={locale}
               />
             </div>
+            {profile.is_example && (
+              <p className="mb-2 text-xs italic text-text-dim">
+                {t("exampleProfileNote")}
+              </p>
+            )}
             <p className="mb-2 text-sm leading-relaxed text-text-muted">
               {profile.bio || t("noBioYet")}
             </p>
