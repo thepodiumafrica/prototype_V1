@@ -16,7 +16,7 @@ const USER_TYPE_KEY: Record<UserType, DictKey> = {
 };
 
 export default function SignUpPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -58,7 +58,16 @@ export default function SignUpPage() {
       email,
       password,
       options: {
-        data: { username, user_type: userType, date_of_birth: dateOfBirth },
+        // Whatever language the signup form itself was showing -- read on
+        // the DB side by handle_new_user() and stored as the new
+        // profile's preferred_language, so it's already right the first
+        // time they sign in elsewhere.
+        data: {
+          username,
+          user_type: userType,
+          date_of_birth: dateOfBirth,
+          preferred_language: locale,
+        },
       },
     });
 

@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { translate, type DictKey, type Locale } from "@/lib/i18n/dictionary";
 import { LOCALE_COOKIE } from "@/lib/i18n/cookie";
+import { createClient } from "@/lib/supabase/client";
 
 interface LocaleContextValue {
   locale: Locale;
@@ -44,6 +45,23 @@ export function LocaleProvider({
     setCurrent(next);
     document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
     router.refresh();
+
+    // Best-effort, not awaited: the toggle itself must stay instant
+    // regardless of network latency. If the visitor is signed in, this
+    // also saves the choice to profiles.preferred_language so it follows
+    // them to a browser/device that doesn't have this cookie yet -- see
+    // proxy.ts for where that gets read back on a fresh device.
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .update({ preferred_language: next })
+        .eq("id", user.id)
+        .then(({ error }) => {
+          if (error) console.error("preferred_language sync failed:", error.message);
+        });
+    });
   }, [current, router]);
 
   const t = useCallback(
