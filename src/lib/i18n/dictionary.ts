@@ -419,12 +419,6 @@ export const en = {
   proverbSavedTag: "on learning",
   proverbDrafts: "However long the night, the dawn will break.",
   proverbDraftsTag: "on patience",
-
-  // ─── Relative time (lib/format.ts) ───────────────────────────────
-  justNow: "just now",
-  minAgo: "{n}m ago",
-  hourAgo: "{n}h ago",
-  dayAgo: "{n}d ago",
 } as const;
 
 export type Locale = "en" | "fr";
@@ -839,12 +833,6 @@ export const fr: Record<DictKey, string> = {
   proverbSavedTag: "sur l'apprentissage",
   proverbDrafts: "Aussi longue soit la nuit, l'aube finit par se lever.",
   proverbDraftsTag: "sur la patience",
-
-  // ─── Relative time (lib/format.ts) ───────────────────────────────
-  justNow: "à l'instant",
-  minAgo: "il y a {n} min",
-  hourAgo: "il y a {n} h",
-  dayAgo: "il y a {n} j",
 };
 
 export const dictionaries: Record<Locale, Record<DictKey, string>> = {
